@@ -1,0 +1,81 @@
+Listado de Endpoints API (Facturador Pro 7)
+-------------------------------------------
+Ruta base: http://tudominio.com/api/
+
+AUTENTICACIÓN Y TOKEN
+GET  /api/generate_token
+POST /api/login
+
+DOCUMENTOS ELECTRÓNICOS (Facturas, Boletas)
+POST /api/documents
+GET  /api/documents/lists
+GET  /api/documents/lists/{startDate}/{endDate}
+POST /api/documents/updatedocumentstatus
+POST /api/documents/send
+GET  /api/documents/search/customers
+POST /api/documents/status
+POST /api/documents_server
+GET  /api/document_check_server/{external_id}
+
+NOTAS DE VENTA
+POST /api/sale-note
+GET  /api/sale-note/series
+GET  /api/sale-note/lists
+POST /api/sale-note/email
+POST /api/sale-note/{id}/generate-cpe
+
+RESÚMENES Y ANULACIONES
+POST /api/summaries
+POST /api/summaries/status
+POST /api/voided
+POST /api/voided/status
+
+GUÍAS DE REMISIÓN
+POST /api/dispatches
+POST /api/dispatches/send
+POST /api/dispatches/status_ticket
+GET  /api/dispatches/tables
+GET  /api/dispatches/records
+
+OTROS COMPROBANTES
+POST /api/retentions (Retenciones)
+POST /api/perceptions (Percepciones)
+POST /api/purchase-settlements (Liquidaciones de compra)
+
+CONSULTAS DE SERVICIOS (RUC, DNI, CDR)
+GET  /api/services/ruc/{number}
+GET  /api/services/dni/{number}
+POST /api/services/consult_cdr_status
+POST /api/services/validate_cpe
+
+PRODUCTOS Y CLIENTES
+GET  /api/document/search-items
+GET  /api/document/search-customers
+POST /api/item
+POST /api/items/{id}/update
+POST /api/item/upload
+POST /api/person
+
+PEDIDOS Y COTIZACIONES
+GET  /api/orders
+POST /api/orders
+GET  /api/quotations/list
+POST /api/quotations
+POST /api/quotations/email
+GET  /api/quotations/tables
+
+CAJA
+POST /api/cash/open
+GET  /api/cash/close/{cash}
+GET  /api/cash/opening_cash
+POST /api/cash/restaurant
+POST /api/cash/cash_document
+
+RESELLER (Requiere auth system_api)
+POST /api/reseller/detail
+POST /api/reseller/lockedAdmin
+POST /api/reseller/lockedTenant
+
+-------------------------------------------
+Nota sobre los ejemplos JSON:
+Los archivos JSON de ejemplo con las estructuras de las peticiones (payloads) NO se encuentran físicamente dentro del código fuente de este proyecto. Usualmente, estos ejemplos (como el Postman Collection) se entregan por separado en la documentación oficial del sistema.
