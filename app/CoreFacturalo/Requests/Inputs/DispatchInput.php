@@ -353,7 +353,11 @@ class DispatchInput
         if (array_key_exists('items', $inputs)) {
             $items = [];
             foreach ($inputs['items'] as $row) {
-                $item = Item::find($row['item_id']);
+                if (isset($row['internal_id'])) {
+                    $item = Item::where('internal_id', $row['internal_id'])->first();
+                } else {
+                    $item = Item::find($row['item_id']);
+                }
                 $itemDispatch = $row['item'] ?? [];
                 $row['IdLoteSelected'] = $row['IdLoteSelected'] ?? $itemDispatch['IdLoteSelected'] ?? null;
 
