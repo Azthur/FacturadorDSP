@@ -166,6 +166,61 @@ POST /api/dispatches
 }
 
 =======================================================
+EJEMPLO 4: Guía de Recojo (Motivo 07) con Proveedor
+Cuando se genera una guía por devolución/recojo (transfer_reason_type_id: "07"), se debe enviar los datos del proveedor (`seller_data`) de donde se recogen los bienes.
+=======================================================
+POST /api/dispatches
+
+{
+    "establishment_id": 1,
+    "document_type_id": "09",
+    "series": "T001",
+    "number": "#",
+    "date_of_issue": "2023-10-25",
+    "time_of_issue": "10:30:00",
+    "customer_id": 1,
+    "transport_mode_type_id": "02",
+    "transfer_reason_type_id": "07",
+    "transfer_reason_description": "Recojo de bienes",
+    "date_of_shipping": "2023-10-25",
+    "unit_type_id": "KGM",
+    "total_weight": 10.5,
+    "packages_number": 1,
+    "origin": {
+        "country_id": "PE",
+        "location_id": "150101",
+        "address": "Av. Proveedor 123, Lima"
+    },
+    "delivery": {
+        "country_id": "PE",
+        "location_id": "150101",
+        "address": "Av. Mi Empresa 456, Lima"
+    },
+    "driver": {
+        "identity_document_type_id": "1",
+        "number": "12345678",
+        "name": "Juan Perez Conductor"
+    },
+    "transport": {
+        "plate_number": "ABC-123"
+    },
+    "optional": {
+        "seller_data": {
+            "identity_document_type_id": "6",
+            "number": "20123456789",
+            "name": "PROVEEDOR S.A.C."
+        }
+    },
+    "items": [
+        {
+            "internal_id": "SKU-100",
+            "description": "Producto a recoger",
+            "quantity": 1
+        }
+    ]
+}
+
+=======================================================
 ACLARACIONES Y CONSIDERACIONES:
 =======================================================
 - `number`: Si se envía como `#`, el sistema generará el número de comprobante automáticamente de forma correlativa.

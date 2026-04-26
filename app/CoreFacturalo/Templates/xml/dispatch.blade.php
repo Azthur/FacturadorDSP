@@ -46,17 +46,6 @@
                 </cac:PartyIdentification>
             </cac:IssuerParty>
         </cac:AdditionalDocumentReference>
-        <!--  DATOS DEL PROVEEDOR  -->
-        {{-- <cac:SellerSupplierParty>
-            <cac:Party>
-                <cac:PartyIdentification>
-                    <cbc:ID schemeID="6" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">{{ $row['customer'] }}</cbc:ID>
-                </cac:PartyIdentification>
-                <cac:PartyLegalEntity>
-                    <cbc:RegistrationName>{{ $row['name'] }}</cbc:RegistrationName>
-                </cac:PartyLegalEntity>
-            </cac:Party>
-        </cac:SellerSupplierParty> --}}
         @endforeach
     @endif
     <!-- Signature -->
@@ -110,6 +99,21 @@
             </cac:PartyLegalEntity>
         </cac:Party>
     </cac:DeliveryCustomerParty>
+    @if($document['transfer_reason_type_id'] === '07' && $document['seller_number'])
+    <cac:SellerSupplierParty>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                        schemeAgencyName="PE:SUNAT"
+                        schemeName="Documento de Identidad"
+                        schemeID="{{ $document['seller_identity_document_type_id'] }}">{{ $document['seller_number'] }}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName><![CDATA[{{ $document['seller_name'] }}]]></cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+        </cac:Party>
+    </cac:SellerSupplierParty>
+    @endif
     <cac:Shipment>
         <!-- ID OBLIGATORIO POR UBL -->
         <cbc:ID>1</cbc:ID>

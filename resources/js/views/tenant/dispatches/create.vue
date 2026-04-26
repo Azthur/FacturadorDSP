@@ -78,6 +78,26 @@
                                     </div>
                                 </template>
                             </div>
+                            
+                            <template v-if="form.transfer_reason_type_id === '07'">
+                                <div class="col-lg-4">
+                                    <div :class="{ 'has-danger': errors.seller_id }" class="form-group">
+                                        <label class="control-label">
+                                            Proveedor de Recojo<span class="text-danger"> *</span>
+                                            <a href="#" @click.prevent="showDialogNewSupplier = true">[+ Nuevo]</a>
+                                        </label>
+                                        <el-select v-model="form.seller_id" :loading="loading_search"
+                                            :remote-method="searchRemoteSuppliers" filterable
+                                            placeholder="Escriba el nombre o número de documento del proveedor"
+                                            popper-class="el-select-customers" remote @change="changeSupplier">
+                                            <el-option v-for="option in suppliers" :key="option.id" :label="option.description"
+                                                :value="option.id"></el-option>
+                                        </el-select>
+                                        <small v-if="errors.seller_id" class="form-control-feedback"
+                                            v-text="errors.seller_id[0]"></small>
+                                    </div>
+                                </div>
+                            </template>
                             <div class="col-lg-2">
                                 <div :class="{ 'has-danger': errors.transport_mode_type_id }" class="form-group">
                                     <label class="control-label">Modo de traslado<span class="text-danger"> *</span></label>
@@ -764,6 +784,9 @@
     
             <person-form :external="true" :showDialog.sync="showDialogNewPerson" :input_person="input_person"
                 :is_dispatch="true" type="customers"></person-form>
+                
+            <person-form :external="true" :showDialog.sync="showDialogNewSupplier" :input_person="input_person"
+                :is_dispatch="true" type="suppliers"></person-form>
     
             <driver-form :showDialog.sync="showDialogDriverForm" @success="successDriver"></driver-form>
     
@@ -893,6 +916,7 @@ export default {
             showDialogAddItems: false,
             showDialogFinish: false,
             showDialogNewPerson: false,
+            showDialogNewSupplier: false,
             showDialogDriverForm: false,
             showDialogTransportForm: false,
             showDialogDispatcherForm: false,
@@ -931,6 +955,7 @@ export default {
             loading_search_dispatcher: false,
             search_item_by_barcode: false,
             customers: [],
+            suppliers: [],
             code: null,
             locations: [],
             series: [],
@@ -1325,6 +1350,35 @@ export default {
                     this.loading_search = false
                     this.input_person.number = (this.customers.length == 0) ? input : null
                 })
+        },
+        searchRemoteSuppliers(input) {
+            this.loading_search = true;
+            this.$http.get(`/persons/search-data/suppliers`, {
+                params: {
+                    input: input,
+                }
+            })
+            .then(response => {
+                this.suppliers = response.data.data ? response.data.data : response.data;
+                this.loading_search = false;
+            })
+            .catch(error => {
+                console.error(error);
+                this.loading_search = false;
+            });
+        },
+        changeSupplier() {
+            let supplier = _.find(this.suppliers, { 'id': this.form.seller_id });
+            if (supplier) {
+                if(!this.form.optional) {
+                    this.form.optional = {};
+                }
+                this.form.optional.seller_data = {
+                    identity_document_type_id: supplier.identity_document_type_id,
+                    number: supplier.number,
+                    name: supplier.name
+                };
+            }
         },
         searchRemoteDispatchers(input) {
             this.loading_search_dispatcher = true

@@ -63,6 +63,25 @@
                                        v-text="errors.customer[0]"></small>
                             </div>
                         </div>
+                        
+                        <template v-if="form.transfer_reason_type_id === '07'">
+                            <div class="col-lg-4">
+                                <div :class="{ 'has-danger': errors.seller_id }" class="form-group">
+                                    <label class="control-label">
+                                        Proveedor de Recojo<span class="text-danger"> *</span>
+                                    </label>
+                                    <el-select v-model="form.seller_id" :loading="loading_search"
+                                        :remote-method="searchRemoteSuppliers" filterable
+                                        placeholder="Escriba el nombre o número de documento del proveedor"
+                                        popper-class="el-select-customers" remote @change="changeSupplier">
+                                        <el-option v-for="option in suppliers" :key="option.id" :label="option.description"
+                                            :value="option.id"></el-option>
+                                    </el-select>
+                                    <small v-if="errors.seller_id" class="form-control-feedback"
+                                        v-text="errors.seller_id[0]"></small>
+                                </div>
+                            </div>
+                        </template>
                         <div class="col-lg-2">
                             <div :class="{'has-danger': errors.transport_mode_type_id}" class="form-group">
                                 <label class="control-label">Modo de traslado<span
@@ -508,7 +527,9 @@ export default {
             countries: [],
             unitTypes: [],
             customers: [],
+            suppliers: [],
             all_series: [],
+            loading_search: false,
             series: [],
             locations: [],
             errors: {
@@ -681,6 +702,10 @@ export default {
                 related: {},
                 order_form_external: null,
                 terms_condition: null,
+                seller_id: null,
+                optional: {
+                    seller_data: null
+                }
             }
         },
         setDescriptionOfItem(item) {
@@ -741,6 +766,35 @@ export default {
         },
         changeDateOfIssue() {
             this.form.date_of_shipping = this.form.date_of_issue
+        },
+        searchRemoteSuppliers(input) {
+            this.loading_search = true;
+            this.$http.get(`/persons/search-data/suppliers`, {
+                params: {
+                    input: input,
+                }
+            })
+            .then(response => {
+                this.suppliers = response.data.data ? response.data.data : response.data;
+                this.loading_search = false;
+            })
+            .catch(error => {
+                console.error(error);
+                this.loading_search = false;
+            });
+        },
+        changeSupplier() {
+            let supplier = _.find(this.suppliers, { 'id': this.form.seller_id });
+            if (supplier) {
+                if(!this.form.optional) {
+                    this.form.optional = {};
+                }
+                this.form.optional.seller_data = {
+                    identity_document_type_id: supplier.identity_document_type_id,
+                    number: supplier.number,
+                    name: supplier.name
+                };
+            }
         },
         filterSeries() {
             this.form.series_id = null

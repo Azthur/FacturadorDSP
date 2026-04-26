@@ -369,6 +369,10 @@ class ServiceDispatchController extends Controller
             'sender_number' => $record->sender_data ? $record->sender_data['number'] : null,
             'sender_name' => $record->sender_data ? $record->sender_data['name'] : null,
 
+            'seller_identity_document_type_id' => ($record->additional_data && isset($record->additional_data->seller_data)) ? $record->additional_data->seller_data->identity_document_type_id : null,
+            'seller_number' => ($record->additional_data && isset($record->additional_data->seller_data)) ? $record->additional_data->seller_data->number : null,
+            'seller_name' => ($record->additional_data && isset($record->additional_data->seller_data)) ? $record->additional_data->seller_data->name : null,
+
             'receiver_identity_document_type_id' => $record->receiver_data ? $record->receiver_data['identity_document_type_id'] : null,
             'receiver_number' => $record->receiver_data ? $record->receiver_data['number'] : null,
             'receiver_name' => $record->receiver_data ? $record->receiver_data['name'] : null,
