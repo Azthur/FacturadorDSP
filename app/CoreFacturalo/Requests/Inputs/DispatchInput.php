@@ -355,6 +355,22 @@ class DispatchInput
             foreach ($inputs['items'] as $row) {
                 if (isset($row['internal_id'])) {
                     $item = Item::where('internal_id', $row['internal_id'])->first();
+                    if (!$item && isset($row['description'])) {
+                        $item = Item::create([
+                            'description' => $row['description'],
+                            'internal_id' => $row['internal_id'],
+                            'item_type_id' => '01',
+                            'unit_type_id' => $row['unit_type_id'] ?? 'NIU',
+                            'currency_type_id' => 'PEN',
+                            'sale_unit_price' => 0,
+                            'purchase_unit_price' => 0,
+                            'has_igv' => 1,
+                            'sale_affectation_igv_type_id' => '10',
+                            'purchase_affectation_igv_type_id' => '10',
+                            'stock' => 0,
+                            'stock_min' => 0,
+                        ]);
+                    }
                 } else {
                     $item = Item::find($row['item_id']);
                 }

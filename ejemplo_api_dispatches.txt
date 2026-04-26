@@ -114,10 +114,62 @@ POST /api/dispatches
 }
 
 =======================================================
+EJEMPLO 3: Productos por Código Interno (Creación Automática)
+Se envían los items usando su SKU. Si no existen, se crearán en la BD automáticamente usando el nombre enviado y la unidad de medida (si no se envía, por defecto será "NIU" - Unidad).
+=======================================================
+POST /api/dispatches
+
+{
+    "establishment_id": 1,
+    "document_type_id": "09",
+    "series": "T001",
+    "number": "#",
+    "date_of_issue": "2023-10-25",
+    "time_of_issue": "10:30:00",
+    "customer_id": 1,
+    "transport_mode_type_id": "01",
+    "transfer_reason_type_id": "01",
+    "transfer_reason_description": "Venta",
+    "date_of_shipping": "2023-10-25",
+    "unit_type_id": "KGM",
+    "total_weight": 15.5,
+    "packages_number": 2,
+    "origin": {
+        "country_id": "PE",
+        "location_id": "150101",
+        "address": "Av. Origen 123, Lima"
+    },
+    "delivery": {
+        "country_id": "PE",
+        "location_id": "150101",
+        "address": "Av. Destino 456, Lima"
+    },
+    "dispatcher": {
+        "identity_document_type_id": "6",
+        "number": "20100113612",
+        "name": "OLVA COURIER SAC"
+    },
+    "items": [
+        {
+            "internal_id": "SKU-999",
+            "description": "Producto Nuevo Creado al Vuelo en Unidades",
+            "unit_type_id": "NIU",
+            "quantity": 2
+        },
+        {
+            "internal_id": "SKU-888",
+            "description": "Otro Producto en Kilogramos",
+            "unit_type_id": "KGM",
+            "quantity": 5.5
+        }
+    ]
+}
+
+=======================================================
 ACLARACIONES Y CONSIDERACIONES:
 =======================================================
 - `number`: Si se envía como `#`, el sistema generará el número de comprobante automáticamente de forma correlativa.
 - `location_id` (Ubigeo): Debe ser un string del Ubigeo oficial de 6 dígitos del Perú (ej. "150101" para Lima, Lima, Lima).
-- `unit_type_id`: El código estándar para kilogramos es "KGM".
+- `unit_type_id`: El código estándar para kilogramos es "KGM", y para Unidades es "NIU".
 - `identity_document_type_id`: "1" es DNI, "6" es RUC.
-- `items`: Contiene el listado de productos. Cada producto se referencia por su `item_id` que es el ID interno del producto en tu base de datos y la `quantity` (cantidad).
+- `items`: Contiene el listado de productos. Cada producto se referencia por su `item_id` (ID interno BD) o por su `internal_id` (SKU). Si usas `internal_id` y el producto no existe, envía `description` y opcionalmente `unit_type_id` para crearlo.
