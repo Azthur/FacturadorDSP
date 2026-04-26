@@ -143,25 +143,27 @@ var btn_crear_cliente = document.querySelector('#client-list .card-body .row .co
 var tabla_clientes = document.querySelector('#client-list .table');
 var limite_reseller = "{{ config('app.limite_reseller') }}";
 
-btn_crear_cliente.disabled = true;
+if (btn_crear_cliente) {
+    btn_crear_cliente.disabled = true;
 
-var esperar_tabla = setInterval(function(){
-  if(tabla_clientes && tabla_clientes.rows.length > 1){
-    console.log('existe tabla');
+    var esperar_tabla = setInterval(function(){
+      if(tabla_clientes && tabla_clientes.rows.length > 1){
+        console.log('existe tabla');
 
-    if(tabla_clientes.rows.length >= limite_reseller){
-      btn_crear_cliente.innerText = 'Clientes máximos creados. Actualice su plan llamando al 944999965';
-      btn_crear_cliente.disabled = true;
-    } else {
-	 btn_crear_cliente.disabled = false;
-    }
-    clearInterval(esperar_tabla);
-  } else {
-    console.log('Aún no existe tabla de clientes');
-    btn_crear_cliente.disabled = false;
-  }
+        if(tabla_clientes.rows.length >= limite_reseller){
+          btn_crear_cliente.innerText = 'Clientes máximos creados. Actualice su plan llamando al 944999965';
+          btn_crear_cliente.disabled = true;
+        } else {
+    	 btn_crear_cliente.disabled = false;
+        }
+        clearInterval(esperar_tabla);
+      } else {
+        console.log('Aún no existe tabla de clientes');
+        btn_crear_cliente.disabled = false;
+      }
 
-}, 1000);
+    }, 1000);
+}
 
 </script>
 </body>

@@ -20,7 +20,7 @@ class AddApirucToConfigurations extends Migration
 
         DB::table('configurations')->update([
             'id' => '1',
-            'url_apiruc' => 'https://apiperu.dev',
+            'url_apiruc' => 'https://api.org.pe',
             'token_apiruc' => '4b297f3cf07f893870d7d3db9b22e10ea47a8340e2bef32a3b8ca94153ae5a1c'
         ]);
     }

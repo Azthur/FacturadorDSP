@@ -242,6 +242,9 @@ export default {
             skins: {},
             dialogSkinsVisible: false,
             fileName: '',
+            headers: {
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]')) ? document.querySelector('meta[name="csrf-token"]').content : ''
+            },
         };
     },
     async created() {
@@ -278,10 +281,12 @@ export default {
             const welcomeComponent = document.querySelector(
                 ".welcome-component"
             );
-            if (this.showWelcome) {
-                welcomeComponent.style.display = "block";
-            } else {
-                welcomeComponent.style.display = "none";
+            if (welcomeComponent) {
+                if (this.showWelcome) {
+                    welcomeComponent.style.display = "block";
+                } else {
+                    welcomeComponent.style.display = "none";
+                }
             }
         },
         applyTheme(theme) {
@@ -338,7 +343,7 @@ export default {
                         this.fileName = this.form.default_image;
                     }
 
-                    if (this.visual.sidebar_theme) {
+                    if (this.visual && this.visual.sidebar_theme) {
                         this.applyTheme(this.visual.sidebar_theme);
                     }
 

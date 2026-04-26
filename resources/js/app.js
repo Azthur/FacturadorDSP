@@ -1,6 +1,7 @@
 require('./bootstrap');
 
 import Vue from 'vue'
+window.Vue = Vue;
 import store from './store'
 import ElementUI from 'element-ui'
 

@@ -91,6 +91,10 @@
         "optimize-autoloader": true,
         "allow-plugins": {
             "kylekatarnls/update-helper": true
+        },
+        "audit": {
+            "abandoned": "ignore",
+            "block-insecure": false
         }
     },
     "minimum-stability": "dev",

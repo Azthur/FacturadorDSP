@@ -10,7 +10,7 @@ class ServiceController extends Controller
 {
     /*
      * $date = fecha
-     * si no se obtiene resultado de sunat se consulta apiperu.dev
+     * si no se obtiene resultado de sunat se consulta api.org.pe
      * IDEA: pasar el servicio a system para que con una tarea de cron se consulten las apis/servicios disponibles
      *       y que este a su vez actualice cada tenant ya que clientes reportan que un tenant tiene la tasa de cambio
      *       y otros no, de esta manera se regularizaria el valor en todos los tenant y se podria actualizar o mantener

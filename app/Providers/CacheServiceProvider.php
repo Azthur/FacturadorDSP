@@ -11,9 +11,10 @@ class CacheServiceProvider extends ServiceProvider
 {
     public function boot()
     {
+        /*
         Cache::extend('redis_tenancy', function ($app) {
             if (PHP_SAPI === 'cli') {
-                $uuid = $app['config']['driver'];
+                $uuid = $app['config']['cache.prefix'];
             } else {
                 // ok, this is basically a hack to set the redis cache store
                 // prefix to the UUID of the current website being called
@@ -31,5 +32,6 @@ class CacheServiceProvider extends ServiceProvider
                 $app['config']['cache.stores.redis.connection']
             ));
         });
+        */
     }
 }

@@ -49,8 +49,8 @@ class ServiceData
             }
         }
 
-        $url = $configuration->url_apiruc = !'' ? $configuration->url_apiruc : config('configuration.api_service_url');
-        $token = $configuration->token_apiruc = !'' ? $configuration->token_apiruc : config('configuration.api_service_token');
+        $url = !empty($configuration->url_apiruc) ? $configuration->url_apiruc : config('configuration.api_service_url');
+        $token = !empty($configuration->token_apiruc) ? $configuration->token_apiruc : config('configuration.api_service_token');
         $this->configuration = $configuration;
         $this->trackApi = $trackApi;
         $this->company = $company;
@@ -59,7 +59,8 @@ class ServiceData
         $this->client = new Client(['base_uri' => $url]);
         $this->parameters = [
             'http_errors' => false,
-            'connect_timeout' => 10,
+            'connect_timeout' => 5,
+            'timeout' => 10,
             'verify' => false,
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
@@ -98,81 +99,55 @@ class ServiceData
 
     public function service($type, $number)
     {
-
-        $res = $this->client->request('GET', '/api/' . $type . '/' . $number, $this->parameters);
+        $base_url = (string)$this->client->getConfig('base_uri');
+        $path_prefix = (strpos($base_url, 'api.org.pe') !== false) ? '/v1/' : '/api/';
+        $res = $this->client->request('GET', $path_prefix . $type . '/' . $number, $this->parameters);
         $response = json_decode($res->getBody()->getContents(), true);
 
         $res_data = [];
-        if ($response['success']) {
-            $data = $response['data'];
-            if ($type === 'dni') {
-                $department_id = '';
-                $province_id = null;
-                $district_id = null;
-                $address = null;
-                if (key_exists('source', $response) && $response['source'] === 'apiperu.dev') {
-                    if (strlen($data['ubigeo_sunat'])) {
-                        $department_id = $data['ubigeo'][0];
-                        $province_id = $data['ubigeo'][1];
-                        $district_id = $data['ubigeo'][2];
-                        $address = $data['direccion'];
-                    }
-                } else {
-                    $department_id = $data['ubigeo'][0];
-                    $province_id = $data['ubigeo'][1];
-                    $district_id = $data['ubigeo'][2];
-                    $address = $data['direccion'];
+        if ($response['success'] ?? false) {
+            $data = $response['data'] ?? [];
+            if (is_array($data) && count($data) > 0) {
+                if ($type === 'dni') {
+                    $res_data = [
+                        'name' => $data['nombre_completo'] ?? $data['name'] ?? '',
+                        'trade_name' => '',
+                        'location_id' => $data['ubigeo'] ?? $data['location_id'] ?? [],
+                        'address' => $data['direccion'] ?? $data['address'] ?? '',
+                        'department_id' => $data['ubigeo'][0] ?? $data['location_id'][0] ?? null,
+                        'province_id' => $data['ubigeo'][1] ?? $data['location_id'][1] ?? null,
+                        'district_id' => $data['ubigeo'][2] ?? $data['location_id'][2] ?? null,
+                        'condition' => '',
+                        'state' => '',
+                    ];
                 }
 
-                $res_data = [
-                    'name' => $data['nombre_completo'],
-                    'trade_name' => '',
-                    'location_id' => [
-                        $department_id,
-                        $province_id,
-                        $district_id
-                    ],
-                    'address' => $address,
-                    'department_id' => $department_id,
-                    'province_id' => $province_id,
-                    'district_id' => $district_id,
-                    'condition' => '',
-                    'state' => '',
-                ];
-            }
-
-            if ($type === 'ruc') {
-                $address = '';
-                $department_id = null;
-                $province_id = null;
-                $district_id = null;
-                if (key_exists('source', $response) && $response['source'] === 'apiperu.dev') {
-                    if (strlen($data['ubigeo_sunat'])) {
-                        $department_id = $data['ubigeo'][0];
-                        $province_id = $data['ubigeo'][1];
-                        $district_id = $data['ubigeo'][2];
-                        $address = $data['direccion'];
-                    }
-                } else {
-                    $department_id = $data['ubigeo'][0];
-                    $province_id = $data['ubigeo'][1];
-                    $district_id = $data['ubigeo'][2];
-                    $address = $data['direccion'];
+                if ($type === 'ruc') {
+                    $res_data = [
+                        'name' => $data['nombre_o_razon_social'] ?? $data['name'] ?? '',
+                        'trade_name' => $data['nombre_comercial'] ?? $data['trade_name'] ?? '',
+                        'address' => $data['direccion'] ?? $data['address'] ?? '',
+                        'location_id' => $data['ubigeo'] ?? $data['location_id'] ?? [],
+                        'department_id' => $data['ubigeo'][0] ?? $data['location_id'][0] ?? null,
+                        'province_id' => $data['ubigeo'][1] ?? $data['location_id'][1] ?? null,
+                        'district_id' => $data['ubigeo'][2] ?? $data['location_id'][2] ?? null,
+                        'condition' => $data['condicion'] ?? $data['condition'] ?? '',
+                        'state' => $data['estado'] ?? $data['state'] ?? '',
+                    ];
                 }
 
-                $res_data = [
-                    'name' => $data['nombre_o_razon_social'],
-                    'trade_name' => '',
-                    'address' => $address,
-//                        'department_id' => $department_id,
-//                        'province_id' => $province_id,
-//                        'district_id' => $district_id,
-                    'location_id' => $data['ubigeo'],
-                    'condition' => $data['condicion'],
-                    'state' => $data['estado'],
-                ];
+                if ($type === 'tc') {
+                    $res_data = [
+                        'date' => $data['fecha'] ?? $data['date'] ?? $number,
+                        'purchase' => $data['compra'] ?? $data['purchase'] ?? 1,
+                        'sale' => $data['venta'] ?? $data['sale'] ?? 1,
+                    ];
+                }
+                $response['data'] = $res_data;
+            } else {
+                $response['success'] = false;
+                $response['message'] = $response['message'] ?? 'Data not found';
             }
-            $response['data'] = $res_data;
         }
         $this->saveService(1, $response);
         return $response;
@@ -216,29 +191,35 @@ class ServiceData
                 'sale' => $exchange->sale
             ];
         }
-        $form_params = [
-            'fecha' => $date,
-        ];
-
-        $this->parameters['form_params'] = $form_params;
-        $res = $this->client->request('POST', '/api/tipo_de_cambio', $this->parameters);
+        $base_url = (string)$this->client->getConfig('base_uri');
+        if (strpos($base_url, 'api.org.pe') !== false) {
+            $res = $this->client->request('GET', '/v1/tc/' . $date, $this->parameters);
+        } else {
+            $this->parameters['form_params'] = ['fecha' => $date];
+            $res = $this->client->request('POST', '/api/tipo_de_cambio', $this->parameters);
+        }
         $response = json_decode($res->getBody()->getContents(), true);
 
-        if ($response['success']) {
+        if ($response['success'] ?? false) {
             $data = $response['data'];
-            ExchangeRate::query()->create([
-                'date' => $data['fecha_busqueda'],
-                'date_original' => $data['fecha_sunat'],
-                'sale_original' => $data['venta'],
-                'sale' => $data['venta'],
-                'purchase_original' => $data['compra'],
-                'purchase' => $data['compra'],
+            $purchase = $data['compra'] ?? $data['purchase'] ?? 1;
+            $sale = $data['venta'] ?? $data['sale'] ?? 1;
+            $date_res = $data['fecha'] ?? $data['fecha_busqueda'] ?? $date;
+
+            ExchangeRate::query()->updateOrCreate([
+                'date' => $date_res,
+            ], [
+                'date_original' => $data['fecha_sunat'] ?? $date_res,
+                'sale_original' => $sale,
+                'sale' => $sale,
+                'purchase_original' => $purchase,
+                'purchase' => $purchase,
             ]);
 
             return [
-                'date' => $data['fecha_busqueda'],
-                'purchase' => $data['compra'],
-                'sale' => $data['venta']
+                'date' => $date_res,
+                'purchase' => $purchase,
+                'sale' => $sale
             ];
         }
         $this->saveService(4);
