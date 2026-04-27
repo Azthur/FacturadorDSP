@@ -17,6 +17,7 @@ class DispatchTransform
     {
         $data = [
             'id' => null,
+            'country_id' => Functions::valueKeyInArray($inputs, 'codigo_pais', 'PE'),
             'series' => Functions::valueKeyInArray($inputs, 'serie_documento'),
             'number' => Functions::valueKeyInArray($inputs, 'numero_documento'),
             'date_of_issue' => Functions::valueKeyInArray($inputs, 'fecha_de_emision'),
