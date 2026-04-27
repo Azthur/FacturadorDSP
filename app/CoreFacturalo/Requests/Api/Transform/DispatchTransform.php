@@ -29,7 +29,7 @@ class DispatchTransform
             'transfer_reason_type_id' => Functions::valueKeyInArray($inputs, 'codigo_motivo_traslado'),
             'transfer_reason_description' => Functions::valueKeyInArray($inputs, 'descripcion_motivo_traslado'),
             'date_of_shipping' => Functions::valueKeyInArray($inputs, 'fecha_de_traslado'),
-            'transshipment_indicator' => Functions::valueKeyInArray($inputs, 'indicador_de_transbordo'),
+            'transshipment_indicator' => Functions::valueKeyInArray($inputs, 'indicador_de_transbordo', false),
             'port_code' => Functions::valueKeyInArray($inputs, 'codigo_de_puerto'),
             'unit_type_id' => Functions::valueKeyInArray($inputs, 'unidad_peso_total'),
             'total_weight' => Functions::valueKeyInArray($inputs, 'peso_total'),
