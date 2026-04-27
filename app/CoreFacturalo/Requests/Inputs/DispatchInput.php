@@ -20,6 +20,8 @@ use Modules\Dispatch\Models\Sender;
 use Modules\Dispatch\Models\SenderAddress;
 use Modules\Dispatch\Models\Transport;
 use App\Models\Tenant\Catalogs\District;
+use App\Models\Tenant\Person;
+use App\Models\Tenant\PersonAddress;
 
 class DispatchInput
 {
@@ -355,25 +357,39 @@ class DispatchInput
             foreach ($inputs['items'] as $row) {
                 if (isset($row['internal_id'])) {
                     $item = Item::where('internal_id', $row['internal_id'])->first();
-                    if (!$item && isset($row['description'])) {
+
+                    if ($item) {
+                        // El item existe: actualizar los campos que vengan en el payload
+                        $updateData = [];
+                        if (isset($row['description']))          $updateData['description']    = $row['description'];
+                        if (isset($row['unit_type_id']))         $updateData['unit_type_id']   = $row['unit_type_id'];
+                        if (isset($row['sale_unit_price']))      $updateData['sale_unit_price'] = $row['sale_unit_price'];
+                        if (isset($row['purchase_unit_price']))  $updateData['purchase_unit_price'] = $row['purchase_unit_price'];
+                        if (isset($row['currency_type_id']))     $updateData['currency_type_id'] = $row['currency_type_id'];
+                        if (!empty($updateData)) {
+                            $item->update($updateData);
+                        }
+                    } elseif (isset($row['description'])) {
+                        // El item no existe: crearlo con los datos del payload
                         $item = Item::create([
-                            'description' => $row['description'],
-                            'internal_id' => $row['internal_id'],
-                            'item_type_id' => '01',
-                            'unit_type_id' => $row['unit_type_id'] ?? 'NIU',
-                            'currency_type_id' => 'PEN',
-                            'sale_unit_price' => 0,
-                            'purchase_unit_price' => 0,
-                            'has_igv' => 1,
-                            'sale_affectation_igv_type_id' => '10',
+                            'description'                      => $row['description'],
+                            'internal_id'                      => $row['internal_id'],
+                            'item_type_id'                     => '01',
+                            'unit_type_id'                     => $row['unit_type_id'] ?? 'NIU',
+                            'currency_type_id'                 => $row['currency_type_id'] ?? 'PEN',
+                            'sale_unit_price'                  => $row['sale_unit_price'] ?? 0,
+                            'purchase_unit_price'              => $row['purchase_unit_price'] ?? 0,
+                            'has_igv'                          => 1,
+                            'sale_affectation_igv_type_id'     => '10',
                             'purchase_affectation_igv_type_id' => '10',
-                            'stock' => 0,
-                            'stock_min' => 0,
+                            'stock'                            => 0,
+                            'stock_min'                        => 0,
                         ]);
                     }
                 } else {
                     $item = Item::find($row['item_id']);
                 }
+
                 $itemDispatch = $row['item'] ?? [];
                 $row['IdLoteSelected'] = $row['IdLoteSelected'] ?? $itemDispatch['IdLoteSelected'] ?? null;
 
@@ -482,83 +498,162 @@ class DispatchInput
     private static function getDriverId($inputs)
     {
         if (($inputs['document_type_id'] === '09' && $inputs['transport_mode_type_id'] === '02') || $inputs['document_type_id'] === '31') {
-//            if (key_exists('driver_id', $inputs)) {
-                // return $inputs['driver_id'];
-//            }
-           $driver = $inputs['driver'];
-           $record = Driver::query()
-               ->firstOrCreate([
-                   'identity_document_type_id' => $driver['identity_document_type_id'],
-                   'number' => $driver['number']
-               ], [
-                   'name' => $driver['name'],
-                   'license' => $driver['license'],
-                   'telephone' => $driver['telephone']
-               ]);
+            // Si viene driver_id ya registrado, usarlo directamente
+            if (key_exists('driver_id', $inputs) && !empty($inputs['driver_id'])) {
+                return $inputs['driver_id'];
+            }
+            // Si vienen los datos del conductor, crear o actualizar
+            if (array_key_exists('driver', $inputs) && isset($inputs['driver'])) {
+                $driver = $inputs['driver'];
+                $record = Driver::query()
+                    ->where('identity_document_type_id', $driver['identity_document_type_id'])
+                    ->where('number', $driver['number'])
+                    ->first();
 
-           return $record->id;
+                if ($record) {
+                    $record->update([
+                        'name'      => $driver['name'],
+                        'license'   => $driver['license'] ?? $record->license,
+                        'telephone' => $driver['telephone'] ?? $record->telephone,
+                    ]);
+                } else {
+                    $record = Driver::create([
+                        'identity_document_type_id' => $driver['identity_document_type_id'],
+                        'number'    => $driver['number'],
+                        'name'      => $driver['name'],
+                        'license'   => $driver['license'] ?? null,
+                        'telephone' => $driver['telephone'] ?? null,
+                    ]);
+                }
+                return $record->id;
+            }
         }
         return null;
     }
 
     private static function getTransportId($inputs)
     {
-        if (($inputs['document_type_id'] === '09' && $inputs['transport_mode_type_id'] === '02')  || $inputs['document_type_id'] === '31') {
-//            if (key_exists('transport_id', $inputs)) {
+        if (($inputs['document_type_id'] === '09' && $inputs['transport_mode_type_id'] === '02') || $inputs['document_type_id'] === '31') {
+            // Si viene transport_id ya registrado, usarlo directamente
+            if (key_exists('transport_id', $inputs) && !empty($inputs['transport_id'])) {
                 return $inputs['transport_id'];
-//            }
-//            $transport = $inputs['transport'];
-//            $record = Transport::query()
-//                ->firstOrCreate([
-//                    'plate_number' => $transport['plate_number']
-//                ], [
-//                    'model' => $transport['model'],
-//                    'brand' => $transport['brand']
-//                ]);
-//
-//            return $record->id;
+            }
+            // Si vienen los datos del vehículo, crear o actualizar por placa
+            if (array_key_exists('transport', $inputs) && isset($inputs['transport'])) {
+                $transport = $inputs['transport'];
+                $record = Transport::query()
+                    ->where('plate_number', $transport['plate_number'])
+                    ->first();
+
+                if ($record) {
+                    $record->update([
+                        'model' => $transport['model'] ?? $record->model,
+                        'brand' => $transport['brand'] ?? $record->brand,
+                        'tuc'   => $transport['tuc'] ?? $record->tuc,
+                    ]);
+                } else {
+                    $record = Transport::create([
+                        'plate_number' => $transport['plate_number'],
+                        'model'        => $transport['model'] ?? null,
+                        'brand'        => $transport['brand'] ?? null,
+                        'tuc'          => $transport['tuc'] ?? null,
+                    ]);
+                }
+                return $record->id;
+            }
         }
         return null;
     }
 
     private static function getSenderId($inputs)
     {
-        if ( $inputs['document_type_id'] === '31') {
-            if (key_exists('sender_id', $inputs)) {
+        if ($inputs['document_type_id'] === '31') {
+            // Si viene sender_id ya registrado, usarlo directamente
+            if (key_exists('sender_id', $inputs) && !empty($inputs['sender_id'])) {
                 return $inputs['sender_id'];
             }
-//            $sender = $inputs['sender'];
-//            $record = DispatchPerson::query()
-//                ->firstOrCreate([
-//                    'identity_document_type_id' => $sender['identity_document_type_id'],
-//                    'number' => $sender['number'],
-//                ], [
-//                    'name' => $sender['name']
-//                ]);
-//
-//            return $record->id;
+            // Si vienen los datos del remitente como objeto, crear o actualizar
+            if (key_exists('sender_data', $inputs) && isset($inputs['sender_data'])) {
+                return self::upsertDispatchPerson($inputs['sender_data']);
+            }
         }
         return null;
     }
 
     private static function getReceiverId($inputs)
     {
-        if ( $inputs['document_type_id'] === '31') {
-            if (key_exists('receiver_id', $inputs)) {
+        if ($inputs['document_type_id'] === '31') {
+            // Si viene receiver_id ya registrado, usarlo directamente
+            if (key_exists('receiver_id', $inputs) && !empty($inputs['receiver_id'])) {
                 return $inputs['receiver_id'];
             }
-//            $receiver = $inputs['receiver'];
-//            $record = DispatchPerson::query()
-//                ->firstOrCreate([
-//                    'identity_document_type_id' => $receiver['identity_document_type_id'],
-//                    'number' => $receiver['number'],
-//                ], [
-//                    'name' => $receiver['name']
-//                ]);
-//
-//            return $record->id;
+            // Si vienen los datos del destinatario como objeto, crear o actualizar
+            if (key_exists('receiver_data', $inputs) && isset($inputs['receiver_data'])) {
+                return self::upsertDispatchPerson($inputs['receiver_data']);
+            }
         }
         return null;
+    }
+
+    /**
+     * Crea o actualiza una Persona de Despacho (Remitente o Destinatario)
+     * basándose en el número de documento como clave única.
+     */
+    private static function upsertDispatchPerson(array $data): ?int
+    {
+        $identity_document_type_id = $data['identity_document_type_id'];
+        $number                    = $data['number'];
+        $name                      = $data['name'];
+        $address_str               = $data['address'] ?? '-';
+        $location_id               = $data['location_id'] ?? null; // array ['dept','prov','dist']
+
+        // Buscar persona existente por tipo de doc + número
+        $person = Person::query()
+            ->where('identity_document_type_id', $identity_document_type_id)
+            ->where('number', $number)
+            ->first();
+
+        if ($person) {
+            $person->update(['name' => $name]);
+        } else {
+            $dept_id     = $location_id[0] ?? '15';
+            $province_id = $location_id[1] ?? '1501';
+            $district_id = $location_id[2] ?? '150101';
+
+            $person = Person::create([
+                'identity_document_type_id' => $identity_document_type_id,
+                'number'        => $number,
+                'name'          => $name,
+                'type'          => 'customers',
+                'department_id' => $dept_id,
+                'province_id'   => $province_id,
+                'district_id'   => $district_id,
+                'address'       => $address_str,
+            ]);
+
+            // Crear dirección principal de la persona
+            PersonAddress::create([
+                'person_id'         => $person->id,
+                'country_id'        => 'PE',
+                'department_id'     => $dept_id,
+                'province_id'       => $province_id,
+                'district_id'       => $district_id,
+                'address'           => $address_str,
+                'main'              => true,
+                'establishment_code'=> '0000',
+            ]);
+
+            // Crear registro en dispatch_addresses para el panel
+            if ($location_id) {
+                DispatchAddress::create([
+                    'person_id'   => $person->id,
+                    'location_id' => $location_id,
+                    'address'     => $address_str,
+                ]);
+            }
+        }
+
+        return $person->id;
     }
 
     private static function getReceiverAddressId($inputs)

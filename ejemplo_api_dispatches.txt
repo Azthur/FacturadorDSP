@@ -114,8 +114,12 @@ POST /api/dispatches
 }
 
 =======================================================
-EJEMPLO 3: Productos por Código Interno (Creación Automática)
-Se envían los items usando su SKU. Si no existen, se crearán en la BD automáticamente usando el nombre enviado y la unidad de medida (si no se envía, por defecto será "NIU" - Unidad).
+EJEMPLO 3: Items por SKU - Crear o Actualizar (internal_id como referencia)
+El sistema busca el item por internal_id:
+  - Si NO existe: lo crea con los datos enviados.
+  - Si SÍ existe: actualiza SOLO los campos que vengan en el payload (descripción,
+    unidad, precio). Los campos no enviados se conservan tal como están en la BD.
+NOTA: Este comportamiento aplica igual para /api/dispatches y /api/dispatch-carrier.
 =======================================================
 POST /api/dispatches
 
@@ -166,7 +170,50 @@ POST /api/dispatches
 }
 
 =======================================================
-EJEMPLO 4: Guía de Recojo (Motivo 07) con Proveedor
+VARIACIÓN DEL EJEMPLO 3: Payload completo (sincronización de catálogo)
+Útil cuando integras con un ERP externo: envía todos los campos del item
+para que el sistema siempre tenga el catálogo actualizado. Los campos que
+no envíes se conservan sin cambios si el item ya existía.
+=======================================================
+POST /api/dispatches
+
+Diferencia vs Ejemplo 3: solo la sección "items" cambia. La estructura
+principal (origin, delivery, dispatcher, etc.) es igual al Ejemplo 3.
+
+"items": [
+    {
+        "internal_id": "SKU-001",
+        "description": "Nombre actualizado del Producto",
+        "unit_type_id": "NIU",
+        "currency_type_id": "PEN",
+        "sale_unit_price": 25.50,
+        "purchase_unit_price": 18.00,
+        "quantity": 3
+    },
+    {
+        "internal_id": "SKU-002",
+        "description": "Caja de 12 unidades",
+        "unit_type_id": "CAJ",
+        "currency_type_id": "PEN",
+        "sale_unit_price": 120.00,
+        "purchase_unit_price": 90.00,
+        "quantity": 2
+    }
+]
+
+Campos actualizables en el item (solo se aplican si vienen en el payload):
+- description      : Nombre/descripción del producto
+- unit_type_id     : Código de unidad (NIU=Unidad, KGM=Kg, CAJ=Caja, etc.)
+- sale_unit_price  : Precio de venta unitario (referencial, no afecta la guía)
+- purchase_unit_price : Precio de compra unitario (referencial)
+- currency_type_id : Moneda (PEN, USD)
+
+Campos que siempre debes enviar:
+- internal_id : SKU o código interno de tu sistema (es la clave de búsqueda)
+- quantity    : Cantidad que se está trasladando
+
+=======================================================
+
 Cuando se genera una guía por devolución/recojo (transfer_reason_type_id: "07"), se debe enviar los datos del proveedor (`seller_data`) de donde se recogen los bienes.
 =======================================================
 POST /api/dispatches
@@ -222,19 +269,14 @@ POST /api/dispatches
 
 =======================================================
 EJEMPLO 3: GUÍA DE REMISIÓN TRANSPORTISTA (document_type_id: "31")
-Este es un tipo especial. La diferencia clave con la Guía Remitente ("09") es que:
-- Se emite desde la empresa TRANSPORTISTA (la que mueve la mercancía).
-- Usa el endpoint: POST /api/dispatch-carrier  (¡diferente al de Remitente!)
-- Requiere IDs de registros YA EXISTENTES en la BD para sender, receiver y transport.
+Emitida por la empresa TRANSPORTISTA que mueve la mercancía.
+Endpoint: POST /api/dispatch-carrier
+
+NOVEDAD: Ya no necesitas registrar conductores, vehículos, remitentes ni
+destinatarios previamente. El sistema los crea automáticamente si no existen,
+o actualiza sus datos si ya están registrados.
 =======================================================
 POST /api/dispatch-carrier
-
-IMPORTANTE - Pasos previos necesarios:
-1. El Remitente (sender) y Destinatario (receiver) deben existir como "Personas de Despacho"
-   en el sistema. Puedes verificarlos en el panel en Guías > Transportista.
-   El sistema los registra cuando los creas manualmente desde la interfaz.
-2. El Vehículo (transport) también debe estar registrado en el sistema (Guías > Vehículos).
-3. Usar los IDs numéricos que el sistema asignó a cada uno.
 
 {
     "establishment_id": 1,
@@ -254,29 +296,30 @@ IMPORTANTE - Pasos previos necesarios:
     "packages_number": 2,
     "container_number": null,
     "reference_documents": [],
-    "sender_id": 1,
     "sender_data": {
         "identity_document_type_id": "6",
         "identity_document_type_description": "RUC",
         "number": "20123456789",
-        "name": "EMPRESA REMITENTE S.A.C."
+        "name": "EMPRESA REMITENTE S.A.C.",
+        "address": "Av. Industrial 100 - Lima",
+        "location_id": ["15", "1501", "150101"]
+    },
+    "receiver_data": {
+        "identity_document_type_id": "6",
+        "identity_document_type_description": "RUC",
+        "number": "20987654321",
+        "name": "EMPRESA DESTINATARIO S.A.C.",
+        "address": "Av. Comercial 200 - Arequipa",
+        "location_id": ["04", "0401", "040101"]
     },
     "sender_address_data": {
         "location_id": ["15", "1501", "150101"],
         "address": "Av. Industrial 100 - Lima"
     },
-    "receiver_id": 2,
-    "receiver_data": {
-        "identity_document_type_id": "6",
-        "identity_document_type_description": "RUC",
-        "number": "20987654321",
-        "name": "EMPRESA DESTINATARIO S.A.C."
-    },
     "receiver_address_data": {
         "location_id": ["04", "0401", "040101"],
         "address": "Av. Comercial 200 - Arequipa"
     },
-    "transport_id": 1,
     "transport": {
         "plate_number": "ABC-123",
         "model": "Volvo FH",
@@ -293,7 +336,7 @@ IMPORTANTE - Pasos previos necesarios:
     "items": [
         {
             "internal_id": "SKU-200",
-            "description": "Mercadería transportada",
+            "description": "Mercaderia transportada",
             "quantity": 10,
             "unit_type_id": "NIU"
         }
@@ -303,10 +346,20 @@ IMPORTANTE - Pasos previos necesarios:
 =======================================================
 ACLARACIONES Y CONSIDERACIONES:
 =======================================================
-- `number`: Si se envía como `#`, el sistema generará el número de comprobante automáticamente de forma correlativa.
-- `location_id` (Ubigeo): Debe ser un string del Ubigeo oficial de 6 dígitos del Perú (ej. "150101" para Lima, Lima, Lima).
-  Para los campos `sender_address_data` y `receiver_address_data` del tipo "31", se envía como array: ["dept_id", "prov_id", "dist_id"].
-- `unit_type_id`: El código estándar para kilogramos es "KGM", y para Unidades es "NIU".
-- `identity_document_type_id`: "1" es DNI, "6" es RUC.
-- `items`: Contiene el listado de productos. Cada producto se referencia por su `item_id` (ID interno BD) o por su `internal_id` (SKU). Si usas `internal_id` y el producto no existe, envía `description` y opcionalmente `unit_type_id` para crearlo.
-- Guía "31" (Transportista) vs "09" (Remitente): La "31" usa endpoint `/api/dispatch-carrier` y requiere `sender_id`, `receiver_id` y `transport_id` como IDs de la BD. La "09" usa `/api/dispatches` y crea los datos en vuelo.
+- `number`: Enviar "#" para que el sistema asigne el correlativo automáticamente.
+- `location_id` (Ubigeo): En Guía Remitente ("09") es un string "150101".
+  En Guía Transportista ("31") los campos *_data usan array: ["15", "1501", "150101"].
+- `unit_type_id`: "KGM" = Kilogramos, "NIU" = Unidades.
+- `identity_document_type_id`: "1" = DNI, "6" = RUC.
+- `items`: Se referencia por `internal_id` (SKU) o `item_id` (ID en BD).
+  Si usas `internal_id` y el producto no existe, envía `description` y `unit_type_id` para crearlo.
+- Guía "31" vs "09":
+    "09" (Remitente)    -> endpoint `/api/dispatches`, usa origin/delivery/dispatcher.
+    "31" (Transportista) -> endpoint `/api/dispatch-carrier`, usa sender_data/receiver_data/transport/driver.
+- Auto-creacion (conductor, vehiculo, remitente, destinatario):
+    El sistema busca por DNI/RUC del conductor o placa del vehiculo. Si existen los actualiza,
+    si no existen los crea automaticamente. Puedes pasar directamente `driver_id`, `transport_id`,
+    `sender_id`, `receiver_id` como IDs numericos para saltarte la busqueda si ya los conoces.
+
+Este es un tipo especial. La diferencia clave con la Guía Remitente ("09") es que:
+
