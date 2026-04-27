@@ -77,16 +77,16 @@ class Functions
             $item = new Item();
             $item->internal_id = $inputs['internal_id'];
             $item->description = $inputs['description'];
-            $item->name = $inputs['name'];
-            $item->second_name = $inputs['second_name'];
-            $item->item_type_id = $inputs['item_type_id'];
-            $item->item_code = $inputs['item_code'];
-            $item->item_code_gs1 = $inputs['item_code_gs1'];
-            $item->unit_type_id = $inputs['unit_type_id'];
-            $item->currency_type_id = $inputs['currency_type_id'];
-            $item->sale_unit_price =  $inputs['unit_price'];
-            $item->sale_affectation_igv_type_id = $inputs['affectation_igv_type_id'];
-            $item->purchase_affectation_igv_type_id = $inputs['affectation_igv_type_id'];
+            $item->name = $inputs['name'] ?? $inputs['description'];
+            $item->second_name = $inputs['second_name'] ?? null;
+            $item->item_type_id = $inputs['item_type_id'] ?? '01';
+            $item->item_code = $inputs['item_code'] ?? null;
+            $item->item_code_gs1 = $inputs['item_code_gs1'] ?? null;
+            $item->unit_type_id = $inputs['unit_type_id'] ?? 'NIU';
+            $item->currency_type_id = $inputs['currency_type_id'] ?? 'PEN';
+            $item->sale_unit_price =  $inputs['unit_price'] ?? 0;
+            $item->sale_affectation_igv_type_id = $inputs['affectation_igv_type_id'] ?? '10';
+            $item->purchase_affectation_igv_type_id = $inputs['affectation_igv_type_id'] ?? '10';
             $item->stock = 0;
             $item->amount_plastic_bag_taxes = self::getAmountPlasticBagTaxes();
             $item->save();
@@ -118,17 +118,17 @@ class Functions
             'internal_id' => $inputs['internal_id'],
         ], [
             'description' => $inputs['description'],
-            'name' => $inputs['name'],
-            'second_name' => $inputs['second_name'],
-            'item_type_id' => $inputs['item_type_id'],
-            'item_code' => $inputs['item_code'],
-            'item_code_gs1' => $inputs['item_code_gs1'],
-            'unit_type_id' => $inputs['unit_type_id'],
-            'currency_type_id' => $inputs['currency_type_id'],
-            'sale_unit_price' =>  $inputs['unit_price'],
-            'sale_affectation_igv_type_id' => $inputs['affectation_igv_type_id'],
-            'purchase_affectation_igv_type_id' => $inputs['affectation_igv_type_id'],
-            'stock' => $inputs['quantity']
+            'name' => $inputs['name'] ?? $inputs['description'],
+            'second_name' => $inputs['second_name'] ?? null,
+            'item_type_id' => $inputs['item_type_id'] ?? '01',
+            'item_code' => $inputs['item_code'] ?? null,
+            'item_code_gs1' => $inputs['item_code_gs1'] ?? null,
+            'unit_type_id' => $inputs['unit_type_id'] ?? 'NIU',
+            'currency_type_id' => $inputs['currency_type_id'] ?? 'PEN',
+            'sale_unit_price' =>  $inputs['unit_price'] ?? 0,
+            'sale_affectation_igv_type_id' => $inputs['affectation_igv_type_id'] ?? '10',
+            'purchase_affectation_igv_type_id' => $inputs['affectation_igv_type_id'] ?? '10',
+            'stock' => $inputs['quantity'] ?? 0
         ]);
         return $item->id;
     }
