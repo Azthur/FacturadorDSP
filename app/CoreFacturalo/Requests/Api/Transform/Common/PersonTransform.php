@@ -13,7 +13,7 @@ class PersonTransform
             'number' => $inputs['numero_documento'],
             'name' => $inputs['apellidos_y_nombres_o_razon_social'],
             'trade_name' => Functions::valueKeyInArray($inputs, 'nombre_comercial'),
-            'country_id' => Functions::valueKeyInArray($inputs, 'codigo_pais'),
+            'country_id' => Functions::valueKeyInArray($inputs, 'codigo_pais', 'PE'),
             'district_id' => Functions::valueKeyInArray($inputs, 'ubigeo'),
             'address' => Functions::valueKeyInArray($inputs, 'direccion'),
             'email' => Functions::valueKeyInArray($inputs, 'correo_electronico'),
