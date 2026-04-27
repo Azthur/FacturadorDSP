@@ -370,26 +370,26 @@ class DispatchInput
                             $item->update($updateData);
                         }
                     } elseif (isset($row['description'])) {
-                        // El item no existe: crearlo con los datos del payload
-                        $item = new Item();
-                        $item->description                      = $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto';
-                        $item->name                             = $item->description;
-                        $item->internal_id                      = $row['internal_id'];
-                        $item->item_type_id                     = '01';
-                        $item->unit_type_id                     = $row['unit_type_id'] ?? 'NIU';
-                        $item->currency_type_id                 = $row['currency_type_id'] ?? 'PEN';
-                        
-                        // Forzamos 0 si es nulo para evitar el error 1048
-                        $sale_unit_price = $row['sale_unit_price'] ?? $row['unit_price'] ?? 0;
-                        $item->sale_unit_price                  = (float)$sale_unit_price;
-
-                        $item->purchase_unit_price              = 0;
-                        $item->has_igv                          = true;
-                        $item->sale_affectation_igv_type_id     = '10';
-                        $item->purchase_affectation_igv_type_id = '10';
-                        $item->stock                            = 0;
-                        $item->stock_min                        = 0;
-                        $item->save();
+                        // El item no existe: crearlo con inserción directa para evitar bloqueos del modelo
+                        $item_id = \Illuminate\Support\Facades\DB::connection('tenant')->table('items')->insertGetId([
+                            'description'                      => $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto',
+                            'name'                             => $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto',
+                            'internal_id'                      => $row['internal_id'],
+                            'item_type_id'                     => '01',
+                            'unit_type_id'                     => $row['unit_type_id'] ?? 'NIU',
+                            'currency_type_id'                 => $row['currency_type_id'] ?? 'PEN',
+                            'sale_unit_price'                  => (float)($row['sale_unit_price'] ?? $row['unit_price'] ?? 0),
+                            'purchase_unit_price'              => 0,
+                            'has_igv'                          => 1,
+                            'sale_affectation_igv_type_id'     => '10',
+                            'purchase_affectation_igv_type_id' => '10',
+                            'stock'                            => 0,
+                            'stock_min'                        => 0,
+                            'active'                           => 1,
+                            'created_at'                       => now(),
+                            'updated_at'                       => now(),
+                        ]);
+                        $item = Item::find($item_id);
                     } else {
                         throw new \Exception(
                             'El item con codigo_interno "' . $row['internal_id'] . '" no existe en el catálogo '
