@@ -221,10 +221,92 @@ POST /api/dispatches
 }
 
 =======================================================
+EJEMPLO 3: GUÍA DE REMISIÓN TRANSPORTISTA (document_type_id: "31")
+Este es un tipo especial. La diferencia clave con la Guía Remitente ("09") es que:
+- Se emite desde la empresa TRANSPORTISTA (la que mueve la mercancía).
+- Usa el endpoint: POST /api/dispatch-carrier  (¡diferente al de Remitente!)
+- Requiere IDs de registros YA EXISTENTES en la BD para sender, receiver y transport.
+=======================================================
+POST /api/dispatch-carrier
+
+IMPORTANTE - Pasos previos necesarios:
+1. El Remitente (sender) y Destinatario (receiver) deben existir como "Personas de Despacho"
+   en el sistema. Puedes verificarlos en el panel en Guías > Transportista.
+   El sistema los registra cuando los creas manualmente desde la interfaz.
+2. El Vehículo (transport) también debe estar registrado en el sistema (Guías > Vehículos).
+3. Usar los IDs numéricos que el sistema asignó a cada uno.
+
+{
+    "establishment_id": 1,
+    "document_type_id": "31",
+    "series": "V001",
+    "number": "#",
+    "date_of_issue": "2024-05-10",
+    "time_of_issue": "10:30:00",
+    "observations": "Traslado de bienes por servicio de transporte",
+    "transfer_reason_type_id": "01",
+    "transfer_reason_description": "Venta",
+    "date_of_shipping": "2024-05-10",
+    "transshipment_indicator": false,
+    "port_code": null,
+    "unit_type_id": "KGM",
+    "total_weight": 50.0,
+    "packages_number": 2,
+    "container_number": null,
+    "reference_documents": [],
+    "sender_id": 1,
+    "sender_data": {
+        "identity_document_type_id": "6",
+        "identity_document_type_description": "RUC",
+        "number": "20123456789",
+        "name": "EMPRESA REMITENTE S.A.C."
+    },
+    "sender_address_data": {
+        "location_id": ["15", "1501", "150101"],
+        "address": "Av. Industrial 100 - Lima"
+    },
+    "receiver_id": 2,
+    "receiver_data": {
+        "identity_document_type_id": "6",
+        "identity_document_type_description": "RUC",
+        "number": "20987654321",
+        "name": "EMPRESA DESTINATARIO S.A.C."
+    },
+    "receiver_address_data": {
+        "location_id": ["04", "0401", "040101"],
+        "address": "Av. Comercial 200 - Arequipa"
+    },
+    "transport_id": 1,
+    "transport": {
+        "plate_number": "ABC-123",
+        "model": "Volvo FH",
+        "brand": "Volvo",
+        "tuc": "B2-00001"
+    },
+    "driver": {
+        "identity_document_type_id": "1",
+        "number": "12345678",
+        "name": "Juan Perez Conductor",
+        "license": "Q31415926",
+        "telephone": "999000111"
+    },
+    "items": [
+        {
+            "internal_id": "SKU-200",
+            "description": "Mercadería transportada",
+            "quantity": 10,
+            "unit_type_id": "NIU"
+        }
+    ]
+}
+
+=======================================================
 ACLARACIONES Y CONSIDERACIONES:
 =======================================================
 - `number`: Si se envía como `#`, el sistema generará el número de comprobante automáticamente de forma correlativa.
 - `location_id` (Ubigeo): Debe ser un string del Ubigeo oficial de 6 dígitos del Perú (ej. "150101" para Lima, Lima, Lima).
+  Para los campos `sender_address_data` y `receiver_address_data` del tipo "31", se envía como array: ["dept_id", "prov_id", "dist_id"].
 - `unit_type_id`: El código estándar para kilogramos es "KGM", y para Unidades es "NIU".
 - `identity_document_type_id`: "1" es DNI, "6" es RUC.
 - `items`: Contiene el listado de productos. Cada producto se referencia por su `item_id` (ID interno BD) o por su `internal_id` (SKU). Si usas `internal_id` y el producto no existe, envía `description` y opcionalmente `unit_type_id` para crearlo.
+- Guía "31" (Transportista) vs "09" (Remitente): La "31" usa endpoint `/api/dispatch-carrier` y requiere `sender_id`, `receiver_id` y `transport_id` como IDs de la BD. La "09" usa `/api/dispatches` y crea los datos en vuelo.

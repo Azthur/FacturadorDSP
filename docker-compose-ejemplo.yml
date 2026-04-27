@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: facturador_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini # Recomendado para límites de memoria
+    networks:
+      - facturador_net
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: facturador_cron
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: [ "cron", "-f" ]
+    networks:
+      - facturador_net
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: facturador_worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: [ "php", "artisan", "queue:work", "--timeout=60" ]
+    depends_on:
+      - redis
+      - db
+    networks:
+      - facturador_net
+
+  db:
+    image: mariadb:10.5
+    container_name: facturador_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: facturador
+      MYSQL_ROOT_PASSWORD: TU_PASSWORD_SEGURO_AQUI # <-- DEBE COINCIDIR CON .env
+    networks:
+      - facturador_net
+    # En producción NO exponemos el 3306 hacia el exterior por seguridad.
+    volumes:
+      - db_data:/var/lib/mysql
+
+  proxy:
+    image: 'jc21/nginx-proxy-manager:2.12.3'
+    container_name: facturador_proxy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - ./npm/data:/data
+      - ./npm/letsencrypt:/etc/letsencrypt
+    networks:
+      - facturador_net
+
+  web:
+    image: nginx:1.25-alpine
+    container_name: facturador_web
+    restart: unless-stopped
+    # Ya no se exponen puertos aquí porque Nginx Proxy Manager se encarga de recibir el tráfico.
+    volumes:
+      - ./:/var/www/html
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+    networks:
+      - facturador_net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: facturador_redis
+    restart: unless-stopped
+    networks:
+      - facturador_net
+
+networks:
+  facturador_net:
+    driver: bridge
+
+volumes:
+  db_data:

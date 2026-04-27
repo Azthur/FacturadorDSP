@@ -1,0 +1,181 @@
+=======================================================
+DOCUMENTACIÓN API: POST /api/documents
+=======================================================
+Este endpoint sirve para generar y emitir Facturas (01), Boletas (03) y Notas de Crédito/Débito (07/08).
+Ruta: POST https://{tu-dominio}/api/documents
+Headers obligatorios:
+- Authorization: Bearer {tu-token-api}
+- Content-Type: application/json
+- Accept: application/json
+
+=======================================================
+EJEMPLO 1: FACTURA ELECTRÓNICA BÁSICA (Bienes)
+=======================================================
+{
+    "series": "F001",
+    "number": "#",
+    "date_of_issue": "2024-05-10",
+    "time_of_issue": "10:30:00",
+    "document_type_id": "01",
+    "currency_type_id": "PEN",
+    "establishment_id": 1,
+    "customer": {
+        "identity_document_type_id": "6",
+        "number": "20123456789",
+        "name": "EMPRESA DE PRUEBA S.A.C.",
+        "trade_name": "EMPRESA DE PRUEBA",
+        "country_id": "PE",
+        "department_id": "15",
+        "province_id": "1501",
+        "district_id": "150101",
+        "address": "Av. Principal 123 - San Isidro"
+    },
+    "total_taxed": 100.00,
+    "total_igv": 18.00,
+    "total_taxes": 18.00,
+    "total_value": 100.00,
+    "total": 118.00,
+    "items": [
+        {
+            "internal_id": "ITEM-001",
+            "description": "Laptop HP Core i7",
+            "unit_type_id": "NIU",
+            "quantity": 1,
+            "unit_value": 100.00,
+            "unit_price": 118.00,
+            "total_base_igv": 100.00,
+            "percentage_igv": 18,
+            "total_igv": 18.00,
+            "total_taxes": 18.00,
+            "total_value": 100.00,
+            "total": 118.00,
+            "affectation_igv_type_id": "10"
+        }
+    ],
+    "payments": [
+        {
+            "date_of_payment": "2024-05-10",
+            "payment_method_type_id": "01",
+            "payment_destination_id": "cash",
+            "reference": "Efectivo entregado en caja",
+            "payment": 118.00
+        }
+    ]
+}
+
+=======================================================
+EJEMPLO 2: BOLETA ELECTRÓNICA BÁSICA (Servicios)
+=======================================================
+{
+    "series": "B001",
+    "number": "#",
+    "date_of_issue": "2024-05-10",
+    "time_of_issue": "15:00:00",
+    "document_type_id": "03",
+    "currency_type_id": "PEN",
+    "establishment_id": 1,
+    "customer": {
+        "identity_document_type_id": "1",
+        "number": "12345678",
+        "name": "JUAN PEREZ",
+        "country_id": "PE",
+        "address": "Av. Las Flores 456"
+    },
+    "total_taxed": 50.00,
+    "total_igv": 9.00,
+    "total_taxes": 9.00,
+    "total_value": 50.00,
+    "total": 59.00,
+    "items": [
+        {
+            "internal_id": "SERV-01",
+            "description": "Mantenimiento Preventivo de PC",
+            "unit_type_id": "ZZ",
+            "quantity": 1,
+            "unit_value": 50.00,
+            "unit_price": 59.00,
+            "total_base_igv": 50.00,
+            "percentage_igv": 18,
+            "total_igv": 9.00,
+            "total_taxes": 9.00,
+            "total_value": 50.00,
+            "total": 59.00,
+            "affectation_igv_type_id": "10"
+        }
+    ],
+    "payments": [
+        {
+            "date_of_payment": "2024-05-10",
+            "payment_method_type_id": "05",
+            "payment_destination_id": "cash",
+            "reference": "Transferencia BCP",
+            "payment": 59.00
+        }
+    ]
+}
+
+=======================================================
+EJEMPLO 3: NOTA DE CRÉDITO
+=======================================================
+{
+    "series": "FC01",
+    "number": "#",
+    "date_of_issue": "2024-05-10",
+    "time_of_issue": "12:00:00",
+    "document_type_id": "07",
+    "currency_type_id": "PEN",
+    "establishment_id": 1,
+    "customer": {
+        "identity_document_type_id": "6",
+        "number": "20123456789",
+        "name": "EMPRESA DE PRUEBA S.A.C."
+    },
+    "total_taxed": 100.00,
+    "total_igv": 18.00,
+    "total_taxes": 18.00,
+    "total_value": 100.00,
+    "total": 118.00,
+    "items": [
+        {
+            "internal_id": "ITEM-001",
+            "description": "Laptop HP Core i7 (Devolución)",
+            "unit_type_id": "NIU",
+            "quantity": 1,
+            "unit_value": 100.00,
+            "unit_price": 118.00,
+            "total_base_igv": 100.00,
+            "percentage_igv": 18,
+            "total_igv": 18.00,
+            "total_taxes": 18.00,
+            "total_value": 100.00,
+            "total": 118.00,
+            "affectation_igv_type_id": "10"
+        }
+    ],
+    "note": {
+        "note_credit_type_id": "07",
+        "note_description": "Devolucion por item defectuoso",
+        "affected_document_id": 15
+    }
+}
+
+=======================================================
+DICCIONARIO DE CAMPOS IMPORTANTES
+=======================================================
+- number: Enviar "#" para que el sistema asigne el correlativo automáticamente.
+- document_type_id: "01" (Factura), "03" (Boleta), "07" (Nota de Crédito), "08" (Nota de Débito).
+- customer.identity_document_type_id: "6" (RUC), "1" (DNI), "4" (Carnet de Extranjería), "7" (Pasaporte).
+- items[].unit_type_id: "NIU" (Unidad de Bienes), "ZZ" (Servicios), "KGM" (Kilogramos).
+- items[].affectation_igv_type_id: 
+    "10": Gravado - Operación Onerosa (Paga IGV)
+    "20": Exonerado - Operación Onerosa
+    "30": Inafecto - Operación Onerosa
+- payments[].payment_method_type_id:
+    "01": Efectivo
+    "02": Tarjeta de crédito
+    "03": Tarjeta de débito
+    "05": Transferencia
+- note.note_credit_type_id:
+    "01": Anulación de la operación
+    "07": Devolución por ítem defectuoso
+- note.affected_document_id: Es el ID interno del facturador (de la tabla documents) del comprobante original a afectar.

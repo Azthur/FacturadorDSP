@@ -1,0 +1,326 @@
+=======================================================
+EJEMPLOS AVANZADOS API: POST /api/documents (VERSIÓN ESPAÑOL)
+=======================================================
+Nota: La API del facturador acepta tanto las llaves en inglés (series, number, date_of_issue) 
+como en español (serie_documento, numero_documento, fecha_de_emision). El sistema las 
+convierte automáticamente gracias al `DocumentTransform`.
+
+A continuación, los ejemplos confirmados de tu colección de Postman:
+
+=======================================================
+1. FACTURA GRAVADA (PAGO AL CONTADO)
+=======================================================
+{
+    "serie_documento": "F001",
+    "numero_documento": "#",
+    "fecha_de_emision": "2024-05-10",
+    "hora_de_emision": "10:11:11",
+    "codigo_tipo_operacion": "0101",
+    "codigo_tipo_documento": "01",
+    "codigo_tipo_moneda": "PEN",
+    "fecha_de_vencimiento": "2024-05-10",
+    "datos_del_cliente_o_receptor": {
+        "codigo_tipo_documento_identidad": "6",
+        "numero_documento": "10414711225",
+        "apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A.",
+        "codigo_pais": "PE",
+        "ubigeo": "150101",
+        "direccion": "Av. 2 de Mayo",
+        "correo_electronico": "demo@gmail.com",
+        "telefono": "427-1148"
+    },
+    "codigo_condicion_de_pago": "01",
+    "totales": {
+        "total_operaciones_gravadas": 100.00,
+        "total_igv": 18.00,
+        "total_impuestos": 18.00,
+        "total_valor": 100,
+        "total_venta": 118
+    },
+    "items": [
+        {
+            "codigo_interno": "P0121",
+            "descripcion": "Producto A",
+            "unidad_de_medida": "NIU",
+            "cantidad": 2,
+            "valor_unitario": 50,
+            "codigo_tipo_precio": "01",
+            "precio_unitario": 59,
+            "codigo_tipo_afectacion_igv": "10",
+            "total_base_igv": 100.00,
+            "porcentaje_igv": 18,
+            "total_igv": 18,
+            "total_impuestos": 18,
+            "total_valor_item": 100,
+            "total_item": 118
+        }
+    ]
+}
+
+=======================================================
+2. FACTURA GRAVADA (PAGO A CRÉDITO CON CUOTAS)
+=======================================================
+{
+    "serie_documento": "F001",
+    "numero_documento": "#",
+    "fecha_de_emision": "2024-05-10",
+    "hora_de_emision": "10:11:11",
+    "codigo_tipo_operacion": "0101",
+    "codigo_tipo_documento": "01",
+    "codigo_tipo_moneda": "PEN",
+    "fecha_de_vencimiento": "2024-06-10",
+    "datos_del_cliente_o_receptor": {
+        "codigo_tipo_documento_identidad": "6",
+        "numero_documento": "10414711225",
+        "apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A.",
+        "codigo_pais": "PE",
+        "ubigeo": "150101",
+        "direccion": "Av. 2 de Mayo"
+    },
+    "codigo_condicion_de_pago": "02",
+    "cuotas": [
+        {
+            "fecha": "2024-05-25",
+            "codigo_tipo_moneda": "PEN",
+            "monto": 59
+        },
+        {
+            "fecha": "2024-06-10",
+            "codigo_tipo_moneda": "PEN",
+            "monto": 59
+        }
+    ],
+    "totales": {
+        "total_operaciones_gravadas": 100.00,
+        "total_igv": 18.00,
+        "total_impuestos": 18.00,
+        "total_valor": 100,
+        "total_venta": 118,
+        "total_pendiente_pago": 118
+    },
+    "items": [
+        {
+            "codigo_interno": "P0121",
+            "descripcion": "Producto A",
+            "unidad_de_medida": "NIU",
+            "cantidad": 2,
+            "valor_unitario": 50,
+            "codigo_tipo_precio": "01",
+            "precio_unitario": 59,
+            "codigo_tipo_afectacion_igv": "10",
+            "total_base_igv": 100.00,
+            "porcentaje_igv": 18,
+            "total_igv": 18,
+            "total_impuestos": 18,
+            "total_valor_item": 100,
+            "total_item": 118
+        }
+    ]
+}
+
+=======================================================
+3. FACTURA CON DETRACCIÓN Y LEYENDA (Pago Contado)
+=======================================================
+{
+    "serie_documento": "F001",
+    "numero_documento": "#",
+    "fecha_de_emision": "2024-05-10",
+    "hora_de_emision": "10:11:11",
+    "codigo_tipo_operacion": "1001",
+    "codigo_tipo_documento": "01",
+    "codigo_tipo_moneda": "PEN",
+    "datos_del_cliente_o_receptor": {
+        "codigo_tipo_documento_identidad": "6",
+        "numero_documento": "10414711225",
+        "apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A.",
+        "codigo_pais": "PE",
+        "ubigeo": "150101",
+        "direccion": "Av. 2 de Mayo"
+    },
+    "codigo_condicion_de_pago": "01",
+    "totales": {
+        "total_operaciones_gravadas": 1000.00,
+        "total_igv": 180.00,
+        "total_impuestos": 180.00,
+        "total_valor": 1000,
+        "total_venta": 1180,
+        "total_pendiente_pago" : 1132.80
+    },
+    "leyendas": [
+        {
+            "codigo": "2006",
+            "valor": "Operación sujeta a detracción"
+        }
+    ],
+    "detraccion": {
+        "codigo_tipo_detraccion": "008",
+        "porcentaje": 4.00,
+        "monto": 47.2,
+        "codigo_metodo_pago": "001",
+        "cuenta_bancaria": "212-165471578"
+    },
+    "items": [
+        {
+            "codigo_interno": "P0150",
+            "descripcion": "Madera caoba xyz",
+            "unidad_de_medida": "NIU",
+            "cantidad": 2,
+            "valor_unitario": 500,
+            "codigo_tipo_precio": "01",
+            "precio_unitario": 590,
+            "codigo_tipo_afectacion_igv": "10",
+            "total_base_igv": 1000.00,
+            "porcentaje_igv": 18,
+            "total_igv": 180,
+            "total_impuestos": 180,
+            "total_valor_item": 1000,
+            "total_item": 1180
+        }
+    ]
+}
+
+=======================================================
+4. FACTURA GRATUITA
+=======================================================
+{
+    "serie_documento": "F001",
+    "numero_documento": "#",
+    "fecha_de_emision": "2024-05-10",
+    "hora_de_emision": "10:11:11",
+    "codigo_tipo_operacion": "0101",
+    "codigo_tipo_documento": "01",
+    "codigo_tipo_moneda": "PEN",
+    "datos_del_cliente_o_receptor": {
+        "codigo_tipo_documento_identidad": "6",
+        "numero_documento": "10414711225",
+        "apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A."
+    },
+    "totales": {
+        "total_operaciones_gravadas": 0.00,
+        "total_operaciones_gratuitas": 100.00,
+        "total_igv_operaciones_gratuitas": 18.00,
+        "total_igv": 0.00,
+        "total_impuestos": 0.00,
+        "total_valor": 0.00,
+        "total_venta": 0.00
+    },
+    "items": [
+        {
+            "codigo_interno": "P0121",
+            "descripcion": "Inca Kola 250 ml (Muestra Gratis)",
+            "unidad_de_medida": "NIU",
+            "cantidad": 2,
+            "valor_unitario": 0.00,
+            "codigo_tipo_precio": "02",
+            "precio_unitario": 50.00,
+            "codigo_tipo_afectacion_igv": "16",
+            "total_base_igv": 100.00,
+            "porcentaje_igv": 18.00,
+            "total_igv": 18.00,
+            "total_impuestos": 0.00,
+            "total_valor_item": 100.00,
+            "total_item": 0.00
+        }
+    ],
+    "leyendas": [
+        {
+            "codigo": "1002",
+            "valor": "TRANSFERENCIA GRATUITA"
+        }
+    ] 
+}
+
+=======================================================
+5. FACTURA CON DESCUENTO GLOBAL
+=======================================================
+{
+    "serie_documento": "F001",
+    "numero_documento": "#",
+    "fecha_de_emision": "2024-05-10",
+    "codigo_tipo_operacion": "0101",
+    "codigo_tipo_documento": "01",
+    "codigo_tipo_moneda": "PEN",
+    "datos_del_cliente_o_receptor": {
+        "codigo_tipo_documento_identidad": "6",
+        "numero_documento": "10414711225",
+        "apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A."
+    },
+    "descuentos": [
+        {
+            "codigo": "02",
+            "descripcion": "Descuentos globales que afectan la base imponible",
+            "factor": 0.20,
+            "monto": 20.00,
+            "base": 100.00
+        }
+    ],  
+    "totales": {
+        "total_descuentos": 20.00,
+        "total_operaciones_gravadas": 80.00,
+        "total_igv": 14.40,
+        "total_impuestos": 14.40,
+        "total_valor": 80,
+        "total_venta": 94.40
+    },
+    "items": [
+        {
+            "codigo_interno": "P0121",
+            "descripcion": "Producto A",
+            "unidad_de_medida": "NIU",
+            "cantidad": 2,
+            "valor_unitario": 50,
+            "codigo_tipo_precio": "01",
+            "precio_unitario": 59,
+            "codigo_tipo_afectacion_igv": "10",
+            "total_base_igv": 100.00,
+            "porcentaje_igv": 18,
+            "total_igv": 18,
+            "total_impuestos": 18,
+            "total_valor_item": 100,
+            "total_item": 118
+        }   
+    ]
+}
+
+=======================================================
+6. FACTURA CON IMPUESTO DE BOLSA PLÁSTICA
+=======================================================
+{
+    "serie_documento": "F001",
+    "numero_documento": "#",
+    "fecha_de_emision": "2024-05-10",
+    "codigo_tipo_documento": "01",
+    "codigo_tipo_moneda": "PEN",
+    "datos_del_cliente_o_receptor": {
+        "codigo_tipo_documento_identidad": "6",
+        "numero_documento": "10414711225",
+        "apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A."
+    },
+    "totales": {
+        "total_operaciones_gravadas": 100.00,
+        "total_impuestos_bolsa_plastica": 0.6,
+        "total_igv": 18.00,
+        "total_impuestos": 18.00,
+        "total_valor": 100,
+        "total_venta": 118.6
+    },
+    "items": [
+        {
+            "codigo_interno": "P0015",
+            "descripcion": "Pepsi 3 lt + Bolsa",
+            "unidad_de_medida": "NIU",
+            "cantidad": 2,
+            "valor_unitario": 50,
+            "codigo_tipo_precio": "01",
+            "precio_unitario": 59,
+            "codigo_tipo_afectacion_igv": "10",
+            "total_base_igv": 100.00,
+            "porcentaje_igv": 18,
+            "total_igv": 18,
+            "total_impuestos_bolsa_plastica": 0.6,
+            "total_impuestos": 18,
+            "total_valor_item": 100,
+            "total_item": 118
+        }
+    ]
+}

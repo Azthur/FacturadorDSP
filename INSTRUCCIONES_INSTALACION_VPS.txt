@@ -1,0 +1,83 @@
+========================================================================
+GUÍA DEFINITIVA DE INSTALACIÓN EN VPS (FACTURADOR PRO 7 CON DOCKER Y SSL)
+========================================================================
+
+Esta guía detalla el procedimiento libre de errores para instalar Facturador Pro 7 
+en un VPS Ubuntu/Debian utilizando Docker, MariaDB, Redis y Nginx Proxy Manager.
+
+------------------------------------------------------------------------
+FASE 1: PREPARACIÓN DEL SERVIDOR
+------------------------------------------------------------------------
+1. Asegúrate de tener instalado Git, Docker y Docker-Compose en tu VPS.
+2. Si tienes Apache o Nginx instalados de fábrica, apágalos para liberar los puertos:
+   sudo systemctl stop apache2 && sudo systemctl disable apache2
+   sudo systemctl stop nginx && sudo systemctl disable nginx
+3. Clona o copia tu proyecto al servidor (ej. /var/www/FacturadorDSP).
+4. Dentro de la carpeta, renombra los archivos de ejemplo para usarlos en producción:
+   cp env.ejemplo .env
+   cp docker-compose-ejemplo.yml docker-compose.yml
+
+------------------------------------------------------------------------
+FASE 2: CONFIGURACIÓN (.env y docker-compose)
+------------------------------------------------------------------------
+1. Edita tu archivo .env (nano .env):
+   - APP_URL=https://tudominio.com
+   - DB_PASSWORD=Ingresa_Una_Clave_Segura_AQUI
+2. Edita tu archivo docker-compose.yml (nano docker-compose.yml):
+   - En el servicio 'db', verifica que MYSQL_ROOT_PASSWORD coincida con la clave del .env.
+
+------------------------------------------------------------------------
+FASE 3: LEVANTAR LOS CONTENEDORES
+------------------------------------------------------------------------
+1. Ejecuta el comando para construir y encender todo:
+   docker-compose up -d --build
+
+2. Una vez diga "done" en todos, verifica que estén corriendo:
+   docker ps 
+   (Deberías ver 7 contenedores: app, db, proxy, web, redis, cron, worker).
+
+------------------------------------------------------------------------
+FASE 4: INSTALACIÓN DEL CÓDIGO (LARAVEL)
+------------------------------------------------------------------------
+1. Borrar dependencias conflictivas de desarrollo (Debugbar) del código:
+   sed -i 's/Barryvdh\\Debugbar\\ServiceProvider::class,//g' config/app.php
+
+2. Instalar el Vendor exclusivo para producción (Evita errores de Dusk):
+   docker exec facturador_app composer install --no-dev --optimize-autoloader
+
+3. Crear carpetas de Storage faltantes y asignar permisos:
+   docker exec facturador_app mkdir -p storage/framework/cache/data storage/framework/views storage/framework/sessions storage/logs bootstrap/cache
+   docker exec facturador_app chown -R www-data:www-data storage bootstrap/cache
+   docker exec facturador_app chmod -R 775 storage bootstrap/cache
+
+4. Configurar Laravel para que confíe en el Proxy (Nginx Proxy Manager) y no rompa el CSS:
+   docker exec facturador_app sed -i "s/protected \$proxies;/protected \$proxies = '*';/g" app/Http/Middleware/TrustProxies.php
+
+5. Limpiar caché, generar llaves e instalar base de datos (Forzado para saltar warnings de prod):
+   docker exec facturador_app php artisan optimize:clear
+   docker exec facturador_app php artisan key:generate
+   docker exec facturador_app php artisan migrate --force
+   docker exec facturador_app php artisan db:seed --force
+   docker exec facturador_app php artisan optimize:clear
+
+------------------------------------------------------------------------
+FASE 5: CONFIGURAR DOMINIO Y SSL (NGINX PROXY MANAGER)
+------------------------------------------------------------------------
+1. Apunta los DNS en tu proveedor (Ej. Cloudflare) hacia la IP del VPS:
+   - Registro A: @ -> IP_VPS
+   - Registro A: * -> IP_VPS (Obligatorio para que funcionen los clientes/tenants).
+2. Entra al panel de Nginx Proxy Manager en tu navegador:
+   http://IP_DE_TU_VPS:81 (User: admin@example.com / Pass: changeme)
+3. Ve a "Proxy Hosts" -> "Add Proxy Host":
+   - Domain Names: *.tudominio.com y tudominio.com
+   - Scheme: http
+   - Forward Hostname / IP: facturador_web
+   - Forward Port: 80
+   - Marcar: Block Common Exploits y Websockets Support.
+4. En la Pestaña "SSL":
+   - Selecciona "Request a new SSL Certificate".
+   - Marca "Force SSL" y "Use a DNS Challenge".
+   - Selecciona tu proveedor DNS (Cloudflare) y pega tu API Token en el cuadro de texto.
+   - Pon tu correo, marca "I Agree..." y dale a Save.
+
+¡Listo! Ve a https://tudominio.com y el sistema estará operativo y optimizado.
