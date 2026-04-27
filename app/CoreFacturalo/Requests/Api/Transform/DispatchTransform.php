@@ -21,7 +21,7 @@ class DispatchTransform
             'series' => Functions::valueKeyInArray($inputs, 'serie_documento'),
             'number' => Functions::valueKeyInArray($inputs, 'numero_documento'),
             'date_of_issue' => Functions::valueKeyInArray($inputs, 'fecha_de_emision'),
-            'time_of_issue' => Functions::valueKeyInArray($inputs, 'hora_de_emision'),
+            'time_of_issue' => Functions::valueKeyInArray($inputs, 'hora_de_emision', date('H:i:s')),
             'document_type_id' => Functions::valueKeyInArray($inputs, 'codigo_tipo_documento'),
             'establishment' => EstablishmentTransform::transform($inputs['datos_del_emisor']),
             'customer' => self::customer($inputs),
