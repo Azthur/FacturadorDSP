@@ -355,7 +355,7 @@ class DispatchInput
         if (array_key_exists('items', $inputs)) {
             $items = [];
             foreach ($inputs['items'] as $row) {
-                if (isset($row['internal_id'])) {
+                if (!empty($row['internal_id'])) {
                     $item = Item::where('internal_id', $row['internal_id'])->first();
 
                     if ($item) {
@@ -385,9 +385,25 @@ class DispatchInput
                             'stock'                            => 0,
                             'stock_min'                        => 0,
                         ]);
+                    } else {
+                        throw new \Exception(
+                            'El item con codigo_interno "' . $row['internal_id'] . '" no existe en el catálogo '
+                            . 'y no se envió descripcion para poder crearlo.'
+                        );
+                    }
+                } elseif (!empty($row['item_id'])) {
+                    $item = Item::find($row['item_id']);
+                    if (!$item) {
+                        throw new \Exception(
+                            'El item_id ' . $row['item_id'] . ' no existe en el catálogo de productos.'
+                        );
                     }
                 } else {
-                    $item = Item::find($row['item_id']);
+                    $descripcion = $row['description'] ?? '(sin descripcion)';
+                    throw new \Exception(
+                        'No se pudo identificar el item "' . $descripcion . '": '
+                        . 'debe enviar un codigo_interno valido (no nulo ni vacio) o un item_id existente.'
+                    );
                 }
 
                 $itemDispatch = $row['item'] ?? [];

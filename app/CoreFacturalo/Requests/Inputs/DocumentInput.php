@@ -182,8 +182,60 @@ class DocumentInput
         if (array_key_exists('items', $inputs)) {
             $items = [];
             foreach ($inputs['items'] as $row) {
-                $item = Item::query()->find($row['item_id']);
-                /** @var Item $item */
+                // Resolución del item: prioridad item_id, luego internal_id
+                if (!empty($row['item_id'])) {
+                    $item = Item::query()->find($row['item_id']);
+                } elseif (!empty($row['internal_id'])) {
+                    $item = Item::where('internal_id', $row['internal_id'])->first();
+
+                    if ($item) {
+                        // El item existe: actualizar solo los campos presentes en el payload
+                        $updateData = [];
+                        if (isset($row['description']))         $updateData['description']         = $row['description'];
+                        if (isset($row['unit_type_id']))        $updateData['unit_type_id']        = $row['unit_type_id'];
+                        if (isset($row['sale_unit_price']))     $updateData['sale_unit_price']     = $row['sale_unit_price'];
+                        if (isset($row['purchase_unit_price'])) $updateData['purchase_unit_price'] = $row['purchase_unit_price'];
+                        if (isset($row['currency_type_id']))    $updateData['currency_type_id']    = $row['currency_type_id'];
+                        if (!empty($updateData)) {
+                            $item->update($updateData);
+                        }
+                    } elseif (isset($row['description'])) {
+                        // El item no existe: crearlo con los datos del payload
+                        $item = Item::create([
+                            'description'                      => $row['description'],
+                            'internal_id'                      => $row['internal_id'],
+                            'item_type_id'                     => '01',
+                            'unit_type_id'                     => $row['unit_type_id'] ?? 'NIU',
+                            'currency_type_id'                 => $row['currency_type_id'] ?? 'PEN',
+                            'sale_unit_price'                  => $row['sale_unit_price'] ?? 0,
+                            'purchase_unit_price'              => $row['purchase_unit_price'] ?? 0,
+                            'has_igv'                          => 1,
+                            'sale_affectation_igv_type_id'     => '10',
+                            'purchase_affectation_igv_type_id' => '10',
+                            'stock'                            => 0,
+                            'stock_min'                        => 0,
+                        ]);
+                    } else {
+                        throw new \Exception(
+                            'El item con codigo_interno "' . $row['internal_id'] . '" no existe en el catálogo '
+                            . 'y no se envió descripcion para poder crearlo.'
+                        );
+                    }
+                } elseif (!empty($row['item_id'])) {
+                    $item = Item::query()->find($row['item_id']);
+                    if (!$item) {
+                        throw new \Exception(
+                            'El item_id ' . $row['item_id'] . ' no existe en el catálogo de productos.'
+                        );
+                    }
+                } else {
+                    $descripcion = $row['description'] ?? '(sin descripcion)';
+                    throw new \Exception(
+                        'No se pudo identificar el item "' . $descripcion . '": '
+                        . 'debe enviar un codigo_interno valido (no nulo ni vacio) o un item_id existente.'
+                    );
+                }
+
 
                 if(key_exists('name_product_xml', $row)) {
                     $name_product_xml = Functions::valueKeyInArray($row, 'name_product_xml');
