@@ -174,9 +174,9 @@ class DispatchTransform
             $delivery = $inputs['direccion_llegada'];
 
             return [
-                'location_id' => $delivery['ubigeo'],
-                'address' => $delivery['direccion'],
-                'code' => $delivery['codigo_del_domicilio_fiscal'],
+                'location_id' => $delivery['ubigeo'] ?? null,
+                'address' => $delivery['direccion'] ?? null,
+                'code' => $delivery['codigo_del_domicilio_fiscal'] ?? '0000',
             ];
         }
         return null;
