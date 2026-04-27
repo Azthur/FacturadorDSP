@@ -121,7 +121,7 @@
         <cbc:HandlingCode listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo20"
                           listName="Motivo de traslado"
                           listAgencyName="PE:SUNAT">{{ $document['transfer_reason_type_id'] }}</cbc:HandlingCode>
-        <cbc:HandlingInstructions>{{ $document['transfer_reason_description'] }}</cbc:HandlingInstructions>
+        <cbc:HandlingInstructions>{{ $document['transfer_reason_description'] ?? $document['transfer_reason_type_name'] ?? '' }}</cbc:HandlingInstructions>
         <!-- PESO BRUTO TOTAL DE LA CARGA-->
         <cbc:GrossWeightMeasure
             unitCode="{{ $document['unit_type_id'] }}">{{ $document['total_weight'] }}</cbc:GrossWeightMeasure>
