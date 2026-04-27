@@ -343,20 +343,18 @@
             @endif
         </tr>
         <tr>
-            @if($document->driver->number)
+            @if($document->driver && $document->driver->number)
                 <td>Conductor Principal: {{$document->driver->name}}</td>
             @endif
-            @if($document->driver->number)
+            @if($document->driver && $document->driver->number)
                 <td>Documento de conductor: {{ $document->driver->number }}</td>
             @endif
         </tr>
         <tr>
-            @if($document->secondary_license_plates)
-                @if($document->secondary_license_plates->semitrailer)
-                    <td>Número de placa semirremolque: {{ $document->secondary_license_plates->semitrailer }}</td>
-                @endif
+            @if($document->secondary_license_plates && is_object($document->secondary_license_plates) && isset($document->secondary_license_plates->semitrailer) && $document->secondary_license_plates->semitrailer)
+                <td>Número de placa semirremolque: {{ $document->secondary_license_plates->semitrailer }}</td>
             @endif
-            @if($document->driver->license)
+            @if($document->driver && $document->driver->license)
                 <td>Licencia del conductor: {{ $document->driver->license }}</td>
             @endif
         </tr>
