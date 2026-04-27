@@ -372,12 +372,12 @@ class DispatchInput
                     } elseif (isset($row['description'])) {
                         // El item no existe: crearlo con los datos del payload
                         $item = Item::create([
-                            'description'                      => $row['description'],
+                            'description'                      => $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto',
                             'internal_id'                      => $row['internal_id'],
                             'item_type_id'                     => '01',
                             'unit_type_id'                     => $row['unit_type_id'] ?? 'NIU',
                             'currency_type_id'                 => $row['currency_type_id'] ?? 'PEN',
-                            'sale_unit_price'                  => $row['sale_unit_price'] ?? 0,
+                            'sale_unit_price'                  => $row['sale_unit_price'] ?? $row['unit_price'] ?? 0,
                             'purchase_unit_price'              => $row['purchase_unit_price'] ?? 0,
                             'has_igv'                          => 1,
                             'sale_affectation_igv_type_id'     => '10',
