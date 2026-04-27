@@ -201,20 +201,21 @@ class DocumentInput
                         }
                     } elseif (isset($row['description'])) {
                         // El item no existe: crearlo con los datos del payload
-                        $item = Item::create([
-                            'description'                      => $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto',
-                            'internal_id'                      => $row['internal_id'],
-                            'item_type_id'                     => '01',
-                            'unit_type_id'                     => $row['unit_type_id'] ?? 'NIU',
-                            'currency_type_id'                 => $row['currency_type_id'] ?? 'PEN',
-                            'sale_unit_price'                  => $row['sale_unit_price'] ?? $row['unit_price'] ?? 0,
-                            'purchase_unit_price'              => $row['purchase_unit_price'] ?? 0,
-                            'has_igv'                          => 1,
-                            'sale_affectation_igv_type_id'     => '10',
-                            'purchase_affectation_igv_type_id' => '10',
-                            'stock'                            => 0,
-                            'stock_min'                        => 0,
-                        ]);
+                        $item = new Item();
+                        $item->description                      = $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto';
+                        $item->name                             = $item->description; // Campo obligatorio en BD
+                        $item->internal_id                      = $row['internal_id'];
+                        $item->item_type_id                     = '01';
+                        $item->unit_type_id                     = $row['unit_type_id'] ?? 'NIU';
+                        $item->currency_type_id                 = $row['currency_type_id'] ?? 'PEN';
+                        $item->sale_unit_price                  = $row['sale_unit_price'] ?? $row['unit_price'] ?? 0;
+                        $item->purchase_unit_price              = $row['purchase_unit_price'] ?? 0;
+                        $item->has_igv                          = true;
+                        $item->sale_affectation_igv_type_id     = '10';
+                        $item->purchase_affectation_igv_type_id = '10';
+                        $item->stock                            = 0;
+                        $item->stock_min                        = 0;
+                        $item->save();
                     } else {
                         throw new \Exception(
                             'El item con codigo_interno "' . $row['internal_id'] . '" no existe en el catálogo '
