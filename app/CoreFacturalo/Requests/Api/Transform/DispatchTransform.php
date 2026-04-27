@@ -160,9 +160,9 @@ class DispatchTransform
             $origin = $inputs['direccion_partida'];
 
             return [
-                'location_id' => $origin['ubigeo'],
-                'address' => $origin['direccion'],
-                'code' => $origin['codigo_del_domicilio_fiscal'],
+                'location_id' => $origin['ubigeo'] ?? null,
+                'address' => $origin['direccion'] ?? null,
+                'code' => $origin['codigo_del_domicilio_fiscal'] ?? '0000',
             ];
         }
         return null;
