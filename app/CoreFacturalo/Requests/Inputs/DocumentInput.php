@@ -203,13 +203,17 @@ class DocumentInput
                         // El item no existe: crearlo con los datos del payload
                         $item = new Item();
                         $item->description                      = $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto';
-                        $item->name                             = $item->description; // Campo obligatorio en BD
+                        $item->name                             = $item->description;
                         $item->internal_id                      = $row['internal_id'];
                         $item->item_type_id                     = '01';
                         $item->unit_type_id                     = $row['unit_type_id'] ?? 'NIU';
                         $item->currency_type_id                 = $row['currency_type_id'] ?? 'PEN';
-                        $item->sale_unit_price                  = $row['sale_unit_price'] ?? $row['unit_price'] ?? 0;
-                        $item->purchase_unit_price              = $row['purchase_unit_price'] ?? 0;
+                        
+                        // Forzamos 0 si es nulo para evitar el error 1048
+                        $sale_unit_price = $row['sale_unit_price'] ?? $row['unit_price'] ?? 0;
+                        $item->sale_unit_price                  = (float)$sale_unit_price;
+                        
+                        $item->purchase_unit_price              = 0;
                         $item->has_igv                          = true;
                         $item->sale_affectation_igv_type_id     = '10';
                         $item->purchase_affectation_igv_type_id = '10';
