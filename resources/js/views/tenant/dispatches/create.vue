@@ -1353,14 +1353,15 @@ export default {
         },
         searchRemoteSuppliers(input) {
             this.loading_search = true;
-            this.$http.get(`/persons/search-data/suppliers`, {
-                params: {
-                    input: input,
-                }
+            this.$http.post(`/store/get_suppliers`, {
+                'input': input,
             })
             .then(response => {
-                this.suppliers = response.data.data ? response.data.data : response.data;
+                this.suppliers = response.data.suppliers;
                 this.loading_search = false;
+                if (this.input_person) {
+                    this.input_person.number = (this.suppliers.length == 0) ? input : null;
+                }
             })
             .catch(error => {
                 console.error(error);

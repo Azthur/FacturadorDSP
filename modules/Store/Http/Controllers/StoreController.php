@@ -207,4 +207,25 @@ class StoreController extends Controller
 
         return compact('customers');
     }
+
+    public function getSuppliers(Request $request)
+    {
+        $identity_document_type_id = $request->input('identity_document_type_id');
+        $input = $request->input('input');
+        $query = Person::query()
+            ->where('number', 'like', "%{$input}%")
+            ->orWhere('name', 'like', "%{$input}%")
+            ->whereType('suppliers');
+        if ($identity_document_type_id) {
+            $query->whereIn('identity_document_type_id', $identity_document_type_id);
+        }
+
+        $suppliers = $query->whereIsEnabled()
+            ->orderBy('name')
+            ->get()->transform(function ($row) {
+                return $row->getCollectionData();
+            });
+
+        return compact('suppliers');
+    }
 }

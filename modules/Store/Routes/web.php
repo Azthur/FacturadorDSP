@@ -12,6 +12,7 @@ if($current_hostname) {
                 Route::post('get_item_series', 'StoreController@getItemSeries');
                 Route::post('get_igv', 'StoreController@getIgv');
                 Route::post('get_customers', 'StoreController@getCustomers');
+                Route::post('get_suppliers', 'StoreController@getSuppliers');
             });
             Route::prefix('documents')->group(function () {
                 Route::get('create/{table?}/{table_id?}', 'StoreController@tableToDocument');
