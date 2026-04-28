@@ -371,12 +371,18 @@ class DispatchInput
                         }
                     } elseif (isset($row['description'])) {
                         // El item no existe: crearlo con inserción directa para evitar bloqueos del modelo
+                        // Validar que unit_type_id exista en el catálogo; si no, usar NIU por defecto
+                        $requestedUnit = $row['unit_type_id'] ?? 'NIU';
+                        $unitExists = \Illuminate\Support\Facades\DB::connection('tenant')
+                            ->table('cat_unit_types')->where('id', $requestedUnit)->exists();
+                        $safeUnit = $unitExists ? $requestedUnit : 'NIU';
+
                         $item_id = \Illuminate\Support\Facades\DB::connection('tenant')->table('items')->insertGetId([
                             'description'                      => $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto',
                             'name'                             => $row['description'] ?? $row['nombre'] ?? 'Nuevo Producto',
                             'internal_id'                      => $row['internal_id'],
                             'item_type_id'                     => '01',
-                            'unit_type_id'                     => $row['unit_type_id'] ?? 'NIU',
+                            'unit_type_id'                     => $safeUnit,
                             'currency_type_id'                 => $row['currency_type_id'] ?? 'PEN',
                             'sale_unit_price'                  => (float)($row['sale_unit_price'] ?? $row['unit_price'] ?? 0),
                             'purchase_unit_price'              => 0,
@@ -386,6 +392,10 @@ class DispatchInput
                             'stock'                            => 0,
                             'stock_min'                        => 0,
                             'active'                           => 1,
+                            'second_name'                      => '',
+                            'item_code'                        => '',
+                            'item_code_gs1'                    => '',
+                            'text_filter'                      => ($row['description'] ?? '') . ' ' . ($row['internal_id'] ?? ''),
                             'created_at'                       => now(),
                             'updated_at'                       => now(),
                         ]);
