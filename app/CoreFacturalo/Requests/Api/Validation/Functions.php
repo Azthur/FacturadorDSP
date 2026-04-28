@@ -74,6 +74,12 @@ class Functions
 
         if (!$item) {
 
+            // Validar que unit_type_id exista en el catálogo; si no, usar NIU
+            $requestedUnit = $inputs['unit_type_id'] ?? 'NIU';
+            $unitExists = \Illuminate\Support\Facades\DB::connection('tenant')
+                ->table('cat_unit_types')->where('id', $requestedUnit)->exists();
+            $safeUnit = $unitExists ? $requestedUnit : 'NIU';
+
             $item = new Item();
             $item->internal_id = $inputs['internal_id'];
             $item->description = $inputs['description'];
@@ -82,9 +88,9 @@ class Functions
             $item->item_type_id = $inputs['item_type_id'] ?? '01';
             $item->item_code = $inputs['item_code'] ?? null;
             $item->item_code_gs1 = $inputs['item_code_gs1'] ?? null;
-            $item->unit_type_id = $inputs['unit_type_id'] ?? 'NIU';
+            $item->unit_type_id = $safeUnit;
             $item->currency_type_id = $inputs['currency_type_id'] ?? 'PEN';
-            $item->sale_unit_price =  $inputs['unit_price'] ?? 0;
+            $item->sale_unit_price =  (float)($inputs['unit_price'] ?? 0);
             $item->sale_affectation_igv_type_id = $inputs['affectation_igv_type_id'] ?? '10';
             $item->purchase_affectation_igv_type_id = $inputs['affectation_igv_type_id'] ?? '10';
             $item->stock = 0;
@@ -114,6 +120,12 @@ class Functions
 
     public static function item2($inputs) {
 
+        // Validar que unit_type_id exista en el catálogo; si no, usar NIU
+        $requestedUnit = $inputs['unit_type_id'] ?? 'NIU';
+        $unitExists = \Illuminate\Support\Facades\DB::connection('tenant')
+            ->table('cat_unit_types')->where('id', $requestedUnit)->exists();
+        $safeUnit = $unitExists ? $requestedUnit : 'NIU';
+
         $item = Item::firstOrCreate([
             'internal_id' => $inputs['internal_id'],
         ], [
@@ -123,12 +135,12 @@ class Functions
             'item_type_id' => $inputs['item_type_id'] ?? '01',
             'item_code' => $inputs['item_code'] ?? null,
             'item_code_gs1' => $inputs['item_code_gs1'] ?? null,
-            'unit_type_id' => $inputs['unit_type_id'] ?? 'NIU',
+            'unit_type_id' => $safeUnit,
             'currency_type_id' => $inputs['currency_type_id'] ?? 'PEN',
-            'sale_unit_price' =>  $inputs['unit_price'] ?? 0,
+            'sale_unit_price' => (float)($inputs['unit_price'] ?? 0),
             'sale_affectation_igv_type_id' => $inputs['affectation_igv_type_id'] ?? '10',
             'purchase_affectation_igv_type_id' => $inputs['affectation_igv_type_id'] ?? '10',
-            'stock' => $inputs['quantity'] ?? 0
+            'stock' => 0,
         ]);
         return $item->id;
     }
