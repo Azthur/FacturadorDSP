@@ -63,6 +63,20 @@ class DispatchTransform
             'reference_documents' => self::documentRelated($inputs),
         ];
         self::AffectedDocument($data, $inputs);
+
+        // Para guía de recojo (07): mapear el remitente como seller_data en additional_data
+        // Esto genera el bloque SellerSupplierParty en el XML según normativa SUNAT
+        if (($data['transfer_reason_type_id'] === '07') && key_exists('datos_del_remitente', $inputs)) {
+            $remitente = $inputs['datos_del_remitente'];
+            $data['additional_data'] = (object)[
+                'seller_data' => (object)[
+                    'identity_document_type_id' => $remitente['codigo_tipo_documento_identidad'] ?? '6',
+                    'number'                    => $remitente['numero_documento'] ?? '',
+                    'name'                      => $remitente['apellidos_y_nombres_o_razon_social'] ?? '',
+                ]
+            ];
+        }
+
         return $data;
     }
     private static function addressData($inputs, $type)
