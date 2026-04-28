@@ -63,40 +63,34 @@
     </tr>
 </table>
 {{-- ===== SECCIÓN DE ENTIDADES ===== --}}
-@if($document->transfer_reason_type_id === '05')
-    {{-- GUÍA DE RECOJO: Mostrar las 3 partes --}}
+@if($document->transfer_reason_type_id === '07')
+    {{-- GUÍA DE RECOJO DE BIENES TRANSFORMADOS: Mostrar las 3 partes --}}
+    @php
+        // Remitente: el transformador. Puede venir de la relación sender o de additional_data->seller_data
+        $remitente_07 = null;
+        if ($document->sender) {
+            $remitente_07 = $document->sender;
+        } elseif ($document->additional_data && isset($document->additional_data->seller_data)) {
+            $remitente_07 = $document->additional_data->seller_data;
+        }
+    @endphp
 
-    {{-- 1. REMITENTE: quien entrega la carga (el cliente externo) --}}
+    {{-- 1. REMITENTE: el transformador que entrega los bienes --}}
+    @if($remitente_07)
     <table class="full-width border-box mt-10 mb-10">
         <thead>
         <tr>
-            <th class="border-bottom text-left" colspan="2">REMITENTE (Entrega la carga)</th>
+            <th class="border-bottom text-left" colspan="2">REMITENTE (Transformador - Entrega la carga)</th>
         </tr>
         </thead>
         <tbody>
-        @if($document->sender)
         <tr>
-            <td><strong>Razón Social:</strong> {{ $document->sender->name }}</td>
-            <td>{{ $document->sender->identity_document_type->description ?? 'Doc.' }}: {{ $document->sender->number }}</td>
+            <td><strong>Razón Social:</strong> {{ $remitente_07->name ?? '' }}</td>
+            <td><strong>RUC:</strong> {{ $remitente_07->number ?? '' }}</td>
         </tr>
-        <tr>
-            <td colspan="2"><strong>Dirección:</strong> {{ $document->sender->address }}
-                {{ ($document->sender->district_id && $document->sender->district) ? ', '.$document->sender->district->description : '' }}
-                {{ ($document->sender->province_id && $document->sender->province) ? ', '.$document->sender->province->description : '' }}
-                {{ ($document->sender->department_id && $document->sender->department) ? '- '.$document->sender->department->description : '' }}
-            </td>
-        </tr>
-        @else
-        <tr>
-            <td><strong>Razón Social:</strong> {{ $customer->name }}</td>
-            <td>{{ $customer->identity_document_type->description ?? 'Doc.' }}: {{ $customer->number }}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Dirección:</strong> {{ $customer->address }}</td>
-        </tr>
-        @endif
         </tbody>
     </table>
+    @endif
 
     {{-- 2. DESTINATARIO: quien recibe la carga (tu empresa u otro) --}}
     <table class="full-width border-box mt-10 mb-10">
@@ -112,13 +106,12 @@
             <td>{{ $document->receiver->identity_document_type->description ?? 'Doc.' }}: {{ $document->receiver->number }}</td>
         </tr>
         <tr>
-            <td colspan="2"><strong>Dirección:</strong> {{ $document->receiver->address }}
-                {{ ($document->receiver->district_id && $document->receiver->district) ? ', '.$document->receiver->district->description : '' }}
-            </td>
+            <td colspan="2"><strong>Dirección:</strong> {{ $document->receiver->address }}</td>
         </tr>
         @else
         <tr>
-            <td colspan="2"><strong>Razón Social:</strong> {{ $company->name }} | <strong>RUC:</strong> {{ $company->number }}</td>
+            <td><strong>Razón Social:</strong> {{ $customer->name }}</td>
+            <td>{{ $customer->identity_document_type->description ?? 'Doc.' }}: {{ $customer->number }}</td>
         </tr>
         @endif
         </tbody>
@@ -324,14 +317,19 @@
     <tr>
         <td colspan="2">
             {{-- P.Partida: {{ $document->origin->location_id }} - {{ $document->origin->address }} --}}
-            @php
-                $direction_label_origin = ($document['transfer_reason_type_id'] != '02' && $document['transfer_reason_type_id'] != '07') ? 'P.Partida:': 'P.Llegada:';
-            @endphp
-            {{ $direction_label_origin }}
-            {{ ($establishment->address !== '-')? $establishment->address : '' }}
-            {{ ($establishment->district_id !== '-')? ', '.$establishment->district->description : '' }}
-            {{ ($establishment->province_id !== '-')? ', '.$establishment->province->description : '' }}
-            {{ ($establishment->department_id !== '-')? '- '.$establishment->department->description : '' }}
+                {{-- Para motivo 07 (Recojo), mostrar la dirección del transformador (origin), no el establishment --}}
+                @if($document['transfer_reason_type_id'] === '07' && $document->origin)
+                    P.Partida: {{ $document->origin->address }}
+                @else
+                @php
+                    $direction_label_origin = ($document['transfer_reason_type_id'] != '02') ? 'P.Partida:': 'P.Llegada:';
+                @endphp
+                {{ $direction_label_origin }}
+                {{ ($establishment->address !== '-')? $establishment->address : '' }}
+                {{ ($establishment->district_id !== '-')? ', '.$establishment->district->description : '' }}
+                {{ ($establishment->province_id !== '-')? ', '.$establishment->province->description : '' }}
+                {{ ($establishment->department_id !== '-')? '- '.$establishment->department->description : '' }}
+                @endif
         </td>
     </tr>
     <tr>
@@ -345,7 +343,7 @@
                     ->where('districts.id', '=', $document->delivery->location_id)
                     ->select('districts.description as district_description', 'provinces.description as province_description','departments.description as department_description')
                     ->first();
-                $direction_label_delivery = ($document['transfer_reason_type_id'] == '02' || $document['transfer_reason_type_id'] == '07') ? 'P.Partida:': 'P.Llegada:';
+                $direction_label_delivery = ($document['transfer_reason_type_id'] == '02') ? 'P.Partida:': 'P.Llegada:';
             @endphp
             {{ $direction_label_delivery }}
             {{  $document->delivery->address  }}
