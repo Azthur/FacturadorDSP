@@ -148,7 +148,7 @@ class DocumentCollection extends ResourceCollection
                 'soap_type_id' => $row->soap_type_id,
                 'soap_type_description' => $row->soap_type->description,
                 'date_of_issue' => $row->date_of_issue->format('d-m-Y'),
-                'date_of_due' => (in_array($row->document_type_id, ['01', '03'])) ? $row->invoice->date_of_due->format('d-m-Y') : null,
+                'date_of_due' => (in_array($row->document_type_id, ['01', '03']) && $row->invoice && $row->invoice->date_of_due) ? $row->invoice->date_of_due->format('d-m-Y') : null,
                 'number' => $row->number_full,
                 'customer_name' => $row->customer->name,
                 'customer_number' => $row->customer->number,
