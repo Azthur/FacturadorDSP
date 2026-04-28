@@ -62,11 +62,73 @@
         
     </tr>
 </table>
-@if($document->transfer_reason_type_id === '04')
+{{-- ===== SECCIÓN DE ENTIDADES ===== --}}
+@if($document->transfer_reason_type_id === '05')
+    {{-- GUÍA DE RECOJO: Mostrar las 3 partes --}}
+
+    {{-- 1. REMITENTE: quien entrega la carga (el cliente externo) --}}
     <table class="full-width border-box mt-10 mb-10">
         <thead>
         <tr>
-            <th class="border-bottom text-left">{{ $document['transfer_reason_type_id'] != '02' ? 'DESTINATARIO' : 'PROVEEDOR' }}</th>
+            <th class="border-bottom text-left" colspan="2">REMITENTE (Entrega la carga)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if($document->sender)
+        <tr>
+            <td><strong>Razón Social:</strong> {{ $document->sender->name }}</td>
+            <td>{{ $document->sender->identity_document_type->description ?? 'Doc.' }}: {{ $document->sender->number }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Dirección:</strong> {{ $document->sender->address }}
+                {{ ($document->sender->district_id && $document->sender->district) ? ', '.$document->sender->district->description : '' }}
+                {{ ($document->sender->province_id && $document->sender->province) ? ', '.$document->sender->province->description : '' }}
+                {{ ($document->sender->department_id && $document->sender->department) ? '- '.$document->sender->department->description : '' }}
+            </td>
+        </tr>
+        @else
+        <tr>
+            <td><strong>Razón Social:</strong> {{ $customer->name }}</td>
+            <td>{{ $customer->identity_document_type->description ?? 'Doc.' }}: {{ $customer->number }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Dirección:</strong> {{ $customer->address }}</td>
+        </tr>
+        @endif
+        </tbody>
+    </table>
+
+    {{-- 2. DESTINATARIO: quien recibe la carga (tu empresa u otro) --}}
+    <table class="full-width border-box mt-10 mb-10">
+        <thead>
+        <tr>
+            <th class="border-bottom text-left" colspan="2">DESTINATARIO (Recibe la carga)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if($document->receiver)
+        <tr>
+            <td><strong>Razón Social:</strong> {{ $document->receiver->name }}</td>
+            <td>{{ $document->receiver->identity_document_type->description ?? 'Doc.' }}: {{ $document->receiver->number }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Dirección:</strong> {{ $document->receiver->address }}
+                {{ ($document->receiver->district_id && $document->receiver->district) ? ', '.$document->receiver->district->description : '' }}
+            </td>
+        </tr>
+        @else
+        <tr>
+            <td colspan="2"><strong>Razón Social:</strong> {{ $company->name }} | <strong>RUC:</strong> {{ $company->number }}</td>
+        </tr>
+        @endif
+        </tbody>
+    </table>
+
+@elseif($document->transfer_reason_type_id === '04')
+    <table class="full-width border-box mt-10 mb-10">
+        <thead>
+        <tr>
+            <th class="border-bottom text-left">DESTINATARIO</th>
         </tr>
         </thead>
         <tbody>
@@ -74,8 +136,7 @@
             <td>Razón Social: {{ $company->name }}</td>
         </tr>
         <tr>
-            <td>RUC: {{ $company->number }}
-            </td>
+            <td>RUC: {{ $company->number }}</td>
         </tr>
         </tbody>
     </table>
@@ -91,13 +152,11 @@
             <td>Razón Social: {{ $customer->name }}</td>
         </tr>
         <tr>
-            <td>{{ $customer->identity_document_type->description }}: {{ $customer->number }}
-            </td>
+            <td>{{ $customer->identity_document_type->description }}: {{ $customer->number }}</td>
         </tr>
         <tr>
             @if($document->transfer_reason_type_id === '09')
-                <td>Dirección: {{ $customer->address }} - {{ $customer->country->description }}
-                </td>
+                <td>Dirección: {{ $customer->address }} - {{ $customer->country->description }}</td>
             @else
                 <td>Dirección: {{ $customer->address }}
                     {{ ($customer->district_id !== '-')? ', '.$customer->district->description : '' }}
@@ -118,7 +177,8 @@
     </table>
 @endif
 
-@if($document->sender_data)
+{{-- REMITENTE: se muestra si viene en sender_data (JSON) o en relación sender --}}
+@if($document->sender_data && $document->transfer_reason_type_id !== '05')
     <table class="full-width border-box mt-10 mb-10">
         <thead>
         <tr>
@@ -127,19 +187,22 @@
         </thead>
         <tbody>
         <tr>
-            <td>Razón Social: {{ $document->sender_data->name }}</td>
+            <td>Razón Social: {{ $document->sender_data->name ?? '' }}</td>
         </tr>
         <tr>
-            <td>{{ $document->sender_data->identity_document_type->description }}: {{ $document->sender_data->number }}</td>
+            <td>N° Doc.: {{ $document->sender_data->number ?? '' }}</td>
         </tr>
+        @if($document->sender_data->address ?? null)
         <tr>
             <td>Dirección: {{ $document->sender_data->address }}</td>
         </tr>
+        @endif
         </tbody>
     </table>
 @endif
 
-@if($document->receiver_data)
+{{-- DESTINATARIO: se muestra si viene en receiver_data (JSON) --}}
+@if($document->receiver_data && $document->transfer_reason_type_id !== '05')
     <table class="full-width border-box mt-10 mb-10">
         <thead>
         <tr>
@@ -148,14 +211,16 @@
         </thead>
         <tbody>
         <tr>
-            <td>Razón Social: {{ $document->receiver_data->name }}</td>
+            <td>Razón Social: {{ $document->receiver_data->name ?? '' }}</td>
         </tr>
         <tr>
-            <td>{{ $document->receiver_data->identity_document_type->description }}: {{ $document->receiver_data->number }}</td>
+            <td>N° Doc.: {{ $document->receiver_data->number ?? '' }}</td>
         </tr>
+        @if($document->receiver_data->address ?? null)
         <tr>
             <td>Dirección: {{ $document->receiver_data->address }}</td>
         </tr>
+        @endif
         </tbody>
     </table>
 @endif
@@ -163,9 +228,7 @@
 @if ($document['transfer_reason_type_id'] == '02')
     <table class="full-width border-box mt-10 mb-10">
     @php
-        // dd($document->toArray());
-        $company = \App\CoreFacturalo\Helpers\Template\TemplateHelper::getInformationCompany();
-        // dd($company);
+        $company_info = \App\CoreFacturalo\Helpers\Template\TemplateHelper::getInformationCompany();
     @endphp
         <thead>
         <tr>
@@ -174,26 +237,20 @@
         </thead>
     <tbody>
     <tr>
-        <td>Razón Social: {{ $company['company']->name }}</td>
+        <td>Razón Social: {{ $company_info['company']->name }}</td>
     </tr>
     <tr>
-        <td>RUC: {{ $company['company']->number }}
-        </td>
+        <td>RUC: {{ $company_info['company']->number }}</td>
     </tr>
     <tr>
-        <td>Dirección: {{ $company['establishment']->address }}
-            {{-- {{ ($customer->district_id !== '-')? ', '.$customer->district->description : '' }}
-            {{ ($customer->province_id !== '-')? ', '.$customer->province->description : '' }}
-            {{ ($customer->department_id !== '-')? '- '.$customer->department->description : '' }} --}}
-        </td>
+        <td>Dirección: {{ $company_info['establishment']->address }}</td>
     </tr>
-    @if ($company['establishment']->telephone)
+    @if ($company_info['establishment']->telephone)
     <tr>
-        <td>Teléfono:{{ $company['establishment']->telephone }}</td>
+        <td>Teléfono:{{ $company_info['establishment']->telephone }}</td>
     </tr>
     @endif
     </tbody>
-
     </table>
 @endif
 @if($document['reference_documents'])
