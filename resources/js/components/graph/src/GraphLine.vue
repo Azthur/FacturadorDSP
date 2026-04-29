@@ -58,36 +58,43 @@ export default {
             return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         },
         createChart() {
+            // Guarda: no dibujar si los datos aún no han llegado del API
+            if (!this.allData || !this.allData.datasets || !this.allData.datasets.length) {
+                return;
+            }
+
             if (this.chart) {
                 this.chart.destroy();
             }
 
             const ctx = this.$refs.canvas.getContext('2d');
-            
+
+            // Colores con fallback hardcodeado por si las variables CSS del tema no están definidas
+            const fallbackColors = { info: '#2196F3', danger: '#fe006c', primary: '#2447e8' };
             const cssColors = {
-                info: this.getCSSVariable('--info'),
-                danger: this.getCSSVariable('--danger'),
-                primary: this.getCSSVariable('--primary-color')
+                info:    this.getCSSVariable('--info')          || fallbackColors.info,
+                danger:  this.getCSSVariable('--danger')        || fallbackColors.danger,
+                primary: this.getCSSVariable('--primary-color') || fallbackColors.primary,
             };
-            
+
             const gradientColors = [
-                { 
-                    base: cssColors.info,
+                {
+                    base:  cssColors.info,
                     start: this.hexToRgba(cssColors.info, 0.7),
-                    end: this.hexToRgba(cssColors.info, 0.1)
+                    end:   this.hexToRgba(cssColors.info, 0.1)
                 },
-                { 
-                    base: cssColors.danger,
+                {
+                    base:  cssColors.danger,
                     start: this.hexToRgba(cssColors.danger, 0.8),
-                    end: this.hexToRgba(cssColors.danger, 0.1)
+                    end:   this.hexToRgba(cssColors.danger, 0.1)
                 },
-                { 
-                    base: cssColors.primary,
+                {
+                    base:  cssColors.primary,
                     start: this.hexToRgba(cssColors.primary, 0.8),
-                    end: this.hexToRgba(cssColors.primary, 0.1)
+                    end:   this.hexToRgba(cssColors.primary, 0.1)
                 }
             ];
-        
+
             const coloredDatasets = this.allData.datasets.map((dataset, index) => {
                 const colorIndex = index % gradientColors.length;
                 const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
