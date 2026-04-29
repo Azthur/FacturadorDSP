@@ -77,7 +77,7 @@
             box-shadow: 2px 0 0 #0088CC inset;
         }
 
-        /* ===== DARK MODE - PANEL SISTEMA ===== */
+        /* ===== DARK MODE - PANEL SISTEMA (MEJORADO) ===== */
         html.dark-mode body,
         html.dark-mode .inner-wrapper,
         html.dark-mode section.body {
@@ -99,8 +99,11 @@
             background: #2e3340 !important;
             color: #60aaff !important;
         }
+        /* Tarjetas y Contenedores */
         html.dark-mode .card,
+        html.dark-mode section.card,
         html.dark-mode .panel,
+        html.dark-mode .card-body,
         html.dark-mode .panel-body {
             background-color: #252932 !important;
             border-color: #2e3340 !important;
@@ -112,6 +115,7 @@
             border-bottom: 1px solid #2e3340 !important;
             color: #d0d6e0 !important;
         }
+        /* Tablas */
         html.dark-mode .table { color: #d0d6e0 !important; }
         html.dark-mode .table thead th {
             background-color: #2b303b !important;
@@ -122,22 +126,43 @@
         html.dark-mode .table th { border-color: #2e3340 !important; }
         html.dark-mode .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(255,255,255,0.03) !important; }
         html.dark-mode .table-hover tbody tr:hover { background-color: rgba(96,170,255,0.07) !important; }
+        html.dark-mode td.sticky-column,
+        html.dark-mode th.sticky-column { background-color: #252932 !important; }
+
+        /* Element UI (Buscadores) */
+        html.dark-mode .el-input__inner {
+            background-color: #2b303b !important;
+            border-color: #3a404d !important;
+            color: #d0d6e0 !important;
+        }
+        html.dark-mode .el-input__inner::placeholder { color: #606878 !important; }
+
+        /* Widgets y Gráficos */
+        html.dark-mode .widget-summary .amount { color: #ffffff !important; }
+        html.dark-mode .progress1-value { background: #252932 !important; color: #ffffff !important; }
+        html.dark-mode .chart-data-selector-items { background: transparent !important; }
+
+        /* General UI */
         html.dark-mode .form-control,
         html.dark-mode .input-group-text {
             background-color: #2b303b !important;
             border-color: #3a404d !important;
             color: #d0d6e0 !important;
         }
-        html.dark-mode .form-control::placeholder { color: #606878 !important; }
         html.dark-mode .btn-default {
             background-color: #2e3340 !important;
             border-color: #3a404d !important;
             color: #d0d6e0 !important;
         }
         html.dark-mode a { color: #60aaff !important; }
-        html.dark-mode a:hover { color: #90c8ff !important; }
-        html.dark-mode .breadcrumb { background-color: #2b303b !important; }
-        html.dark-mode .page-header { background-color: #252932 !important; border-color: #2e3340 !important; }
+        html.dark-mode .breadcrumb li { color: #a0aab8 !important; }
+        html.dark-mode .page-header { 
+            background-color: #252932 !important; 
+            border-color: #2e3340 !important;
+            box-shadow: none !important;
+        }
+        html.dark-mode .page-header h2 { color: #ffffff !important; border-bottom-color: #3a404d !important; }
+
         html.dark-mode .modal-content {
             background-color: #252932 !important;
             border-color: #2e3340 !important;
@@ -151,6 +176,7 @@
         }
         html.dark-mode .dropdown-item { color: #d0d6e0 !important; }
         html.dark-mode .dropdown-item:hover { background-color: #2e3340 !important; }
+
         /* Botón dark mode */
         #btn-dark-mode {
             background: none;
@@ -266,6 +292,29 @@
                 );
                 updateIcon();
             });
+
+            // Lógica de Límite de Clientes (Reseller) - Restaurada
+            var btn_crear_cliente = document.querySelector('#client-list .card-body .row .col button');
+            var tabla_clientes = document.querySelector('#client-list .table');
+            var limite_reseller = "{{ config('app.limite_reseller') }}";
+
+            if (btn_crear_cliente) {
+                btn_crear_cliente.disabled = true;
+
+                var esperar_tabla = setInterval(function () {
+                    if (tabla_clientes && tabla_clientes.rows.length > 1) {
+                        if (tabla_clientes.rows.length >= limite_reseller) {
+                            btn_crear_cliente.innerText = 'Clientes máximos creados. Actualice su plan llamando al 931802429';
+                            btn_crear_cliente.disabled = true;
+                        } else {
+                            btn_crear_cliente.disabled = false;
+                        }
+                        clearInterval(esperar_tabla);
+                    } else {
+                        btn_crear_cliente.disabled = false;
+                    }
+                }, 1000);
+            }
         });
     </script>
 </body>
