@@ -22,6 +22,7 @@
     </div>
     <!-- start: search & user box -->
     <div class="header-right">
+        <button id="btn-dark-mode" title="Modo oscuro" class="mt-2"><i class="fas fa-moon"></i></button>
         <span class="separator"></span>
         <div id="userbox" class="userbox">
             <a href="#" data-toggle="dropdown">

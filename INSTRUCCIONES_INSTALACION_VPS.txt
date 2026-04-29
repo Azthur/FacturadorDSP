@@ -79,5 +79,7 @@ FASE 5: CONFIGURAR DOMINIO Y SSL (NGINX PROXY MANAGER)
    - Marca "Force SSL" y "Use a DNS Challenge".
    - Selecciona tu proveedor DNS (Cloudflare) y pega tu API Token en el cuadro de texto.
    - Pon tu correo, marca "I Agree..." y dale a Save.
-
+5. Correr las dependencias
+   - docker exec -it facturador_app bash -c "cd /var/www/html && npm install && npm run production"
 ¡Listo! Ve a https://tudominio.com y el sistema estará operativo y optimizado.
+
