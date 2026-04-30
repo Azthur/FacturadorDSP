@@ -4784,7 +4784,7 @@ export default {
 
             this.form.id = null;
             this.form.external_id = null;
-            this.form.number = null;
+            this.form.number = '#';
             this.form.date_of_issue = moment().format('YYYY-MM-DD');
             this.form.time_of_issue = moment().format('HH:mm:ss');
             this.form.hash = null;
