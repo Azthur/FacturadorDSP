@@ -651,6 +651,12 @@
                                         Cambiar a estado registrado
                                     </button>
                                     <a
+                                        :href="`/documents/create?source_id=${row.id}`"
+                                        class="dropdown-item"
+                                    >
+                                        Duplicar
+                                    </a>
+                                    <a
                                         :href="`/${resource}/note/${row.id}`"
                                         class="dropdown-item"
                                         v-if="row.btn_note"

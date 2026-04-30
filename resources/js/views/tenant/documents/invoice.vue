@@ -1686,6 +1686,18 @@ export default {
             }).finally(() => this.loading_submit = false);
         }
 
+        const sourceId = new URLSearchParams(window.location.search).get('source_id');
+        console.log('Source ID detectado:', sourceId);
+        if (sourceId) {
+            this.loading_submit = true;
+            await this.$http.get(`/documents/${sourceId}/show`).then(response => {
+                console.log('Datos recibidos para duplicar:', response.data);
+                this.onDuplicateFormData(response.data.data);
+            }).catch(error => {
+                console.error('Error al obtener datos para duplicar:', error);
+            }).finally(() => this.loading_submit = false);
+        }
+
         const itemsFromDispatches = localStorage.getItem('items');
         if (itemsFromDispatches) {
             const itemsParsed = JSON.parse(itemsFromDispatches);
@@ -1993,6 +2005,24 @@ export default {
 
             this.calculateTotal();
             // this.currency_type = _.find(this.currency_types, {'id': this.form.currency_type_id})
+        },
+        async onDuplicateFormData(data) {
+            await this.onSetFormData(data);
+            this.form.id = null;
+            this.form.external_id = null;
+            this.form.number = null;
+            this.form.date_of_issue = moment().format('YYYY-MM-DD');
+            this.form.time_of_issue = moment().format('HH:mm:ss');
+            this.form.hash = null;
+            this.form.filename = null;
+            this.form.state_type_id = '01'; // Registrado
+            this.form.payments = [];
+            this.form.fee = [];
+
+            this.btnText = 'Generar';
+            this.changeDateOfIssue();
+            this.selectDocumentType();
+            this.setDefaultDocumentType();
         },
         async prepareDataCustomer(){
 

@@ -870,7 +870,7 @@ class DocumentController extends Controller
 
     public function show($documentId)
     {
-        $document = Document::findOrFail($documentId);
+        $document = Document::with(['invoice'])->findOrFail($documentId);
         foreach ($document->items as &$item) {
             $discounts = [];
             if($item->discounts) {
