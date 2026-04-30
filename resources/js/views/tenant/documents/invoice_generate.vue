@@ -4712,7 +4712,7 @@ export default {
 
             this.form.quotation_id = data.quotation_id;
 
-            if (data.discounts[0]) {
+            if (data.discounts && data.discounts[0]) {
                 this.recordDiscountsGlobal = data.discounts[0]
                 let discount_type_id = data.discounts[0].discount_type_id
                 this.total_global_discount = discount_type_id !== "02" ? data.total_discount : 
