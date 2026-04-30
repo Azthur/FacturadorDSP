@@ -4373,7 +4373,7 @@ export default {
             this.$eventHub.$emit("eventInitTip");
         },
         startConnectionQzTray() {
-            if (!qz.websocket.isActive() && this.isAutoPrint) {
+            if (typeof qz !== 'undefined' && !qz.websocket.isActive() && this.isAutoPrint) {
                 startConnection();
             }
         },
